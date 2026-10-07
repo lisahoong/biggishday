@@ -1,119 +1,100 @@
-/* App shell: tab routing, folder connection, save indicator. Classic script — loaded last. */
+import * as api from './api.js';
+import { state } from './state.js';
+import { renderGallery } from './gallery.js';
+import { h, errorMessage } from './ui.js';
 
-(() => {
-  const TABS = {
-    overview: tabOverview,
-    inspiration: tabInspiration,
-    palettes: tabPalettes,
-    budget: tabBudget,
-    vendors: tabVendors,
-  };
+const NAME_KEY = 'board.name';
+const root = document.getElementById('app');
+let signedIn;
 
-  const tabRoot = document.getElementById('tabRoot');
-  const banner = document.getElementById('banner');
-  const folderState = document.getElementById('folderState');
-  const connectBtn = document.getElementById('connectBtn');
-  const saveIndicator = document.getElementById('saveIndicator');
-  const brandSub = document.getElementById('brandSub');
+function message(title, text, ...actions) {
+  root.replaceChildren(h('div', { class: 'center-card' }, h('h1', {}, title), h('p', { class: 'muted' }, text), ...actions));
+}
 
-  let activeTab = localStorage.getItem('activeTab') || 'overview';
-  if (!TABS[activeTab]) activeTab = 'overview';
+function card(title, subtitle, form) {
+  root.replaceChildren(h('div', { class: 'center-card' }, h('h1', {}, title), h('p', { class: 'muted' }, subtitle), form));
+  form.querySelector('input')?.focus();
+}
 
-  // ---------- save indicator ----------
-  let hideTimer = null;
-  store.setSaveStatusHandler((status, err) => {
-    clearTimeout(hideTimer);
-    saveIndicator.style.opacity = '1';
-    if (status === 'saving') saveIndicator.textContent = 'saving…';
-    else if (status === 'saved') {
-      saveIndicator.textContent = 'saved';
-      hideTimer = setTimeout(() => { saveIndicator.style.opacity = '0'; }, 1400);
-    } else if (status === 'local') {
-      saveIndicator.textContent = 'saved in browser';
-      hideTimer = setTimeout(() => { saveIndicator.style.opacity = '0'; }, 1400);
-    } else {
-      saveIndicator.textContent = '';
-      toast(`Could not save: ${err?.message || 'unknown error'}`, 'error');
-    }
-  });
-
-  // ---------- tabs ----------
-  document.getElementById('tabs').addEventListener('click', e => {
-    const btn = e.target.closest('button[data-tab]');
-    if (btn) goToTab(btn.dataset.tab);
-  });
-
-  /** Switch tabs programmatically — used by cross-links (e.g. after booking a vendor). */
-  function goToTab(name) {
-    if (!TABS[name]) return;
-    activeTab = name;
-    localStorage.setItem('activeTab', name);
-    render();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  const ctx = { goToTab };
-
-  function renderBanner() {
-    banner.hidden = true;
-    banner.className = 'banner';
-    clear(banner);
-
-    if (!store.CAN_PERSIST) {
-      banner.hidden = false;
-      banner.append('Changes stay in this browser — saving to disk needs Chrome or Edge on desktop.');
-      return;
-    }
-    if (!store.state.canWrite) {
-      banner.hidden = false;
-      banner.className = 'banner warn';
-      appendAll(banner,
-        el('strong', {}, 'Not saving to disk yet.'),
-        el('span', {}, 'Your changes are held in this browser only — clearing site data or switching browsers loses them. Connect the folder once and everything written so far is flushed to disk.'),
-        el('span', { class: 'spacer' }),
-        el('button', { class: 'btn btn-primary btn-sm', onclick: connect }, 'Connect Folder'),
-      );
-    }
-  }
-
-  function render() {
-    for (const btn of document.querySelectorAll('#tabs button[data-tab]')) {
-      btn.classList.toggle('active', btn.dataset.tab === activeTab);
-    }
-
-    const on = store.state.canWrite;
-    folderState.textContent = on ? `saving to ${store.state.rootName}/` : 'browser only';
-    folderState.className = on ? 'state ok' : 'state no';
-    folderState.title = on ? 'Changes are being written to this folder' : 'Changes are not on disk yet';
-    connectBtn.textContent = on ? 'Change folder' : 'Connect Folder';
-    connectBtn.className = on ? 'btn btn-ghost btn-sm' : 'btn btn-secondary btn-sm';
-    connectBtn.hidden = !store.CAN_PERSIST;
-    brandSub.textContent = store.state.data.settings.venue || '';
-
-    renderBanner();
-    clear(tabRoot);
-    TABS[activeTab].render(tabRoot, ctx);
-  }
-
-  store.subscribe(render);
-
-  async function connect(forcePick = false) {
+function renderLogin() {
+  const password = h('input', { type: 'password', required: true, autocomplete: 'current-password', placeholder: 'Board password', 'aria-label': 'Board password' });
+  const button = h('button', { class: 'btn btn-primary', type: 'submit' }, 'Enter');
+  const status = h('p', { class: 'form-error', role: 'alert' });
+  const form = h('form', { class: 'login-form' }, password, button, status);
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    button.disabled = true;
+    status.textContent = '';
     try {
-      await store.connectFolder({ forcePick });
-      toast(`Saving to ${store.state.rootName}/ — everything so far has been written to disk.`);
-    } catch (e) {
-      if (e.name === 'AbortError') return;
-      toast(e.message, 'error');
+      await api.signIn(password.value);
+    } catch (err) {
+      status.textContent = errorMessage(err);
+      button.disabled = false;
+      password.select();
     }
+  });
+  card('Our Wedding Board', 'Enter the board password to see and share inspiration.', form);
+}
+
+function askName(onDone) {
+  const current = localStorage.getItem(NAME_KEY) || '';
+  const name = h('input', { type: 'text', required: true, maxlength: '60', placeholder: 'e.g. Lisa', 'aria-label': 'Your name', value: current, autocomplete: 'given-name' });
+  const form = h('form', { class: 'login-form' }, name, h('button', { class: 'btn btn-primary', type: 'submit' }, 'Continue'));
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const value = name.value.trim().slice(0, 60);
+    if (!value) return;
+    localStorage.setItem(NAME_KEY, value);
+    state.me = { name: value };
+    onDone();
+  });
+  card(current ? 'Change your name' : "What's your name?", 'Shown next to your comments, markings and uploads on this device.', form);
+}
+
+async function loadBoard() {
+  message('Loading…', 'Fetching the board.');
+  try {
+    const { photos, comments, markings } = await api.loadBoard();
+    state.photos = photos;
+    state.comments = groupBy(comments);
+    state.markings = groupBy(markings);
+    renderGallery(root, galleryActions);
+  } catch (err) {
+    message('Something went wrong', errorMessage(err),
+      h('button', { class: 'btn btn-primary', onClick: () => location.reload() }, 'Try again'));
   }
+}
 
-  // Once connected, this button re-opens the picker so a wrong folder can be swapped out.
-  connectBtn.addEventListener('click', () => connect(store.state.canWrite));
+const galleryActions = {
+  onSignOut: () => api.signOut(),
+  onChangeName: () => askName(() => renderGallery(root, galleryActions)),
+};
 
-  // ---------- boot ----------
-  store.load()
-    .then(() => store.tryRestoreFolder())
-    .catch(e => toast(`Could not load data: ${e.message}`, 'error'));
+function boot(session) {
+  const isIn = Boolean(session);
+  if (isIn === signedIn) return;
+  signedIn = isIn;
+  if (!isIn) return renderLogin();
+  const name = localStorage.getItem(NAME_KEY);
+  if (name) {
+    state.me = { name };
+    loadBoard();
+  } else {
+    askName(loadBoard);
+  }
+}
 
-  render();
-})();
+function groupBy(rows) {
+  const map = new Map();
+  for (const row of rows) {
+    if (!map.has(row.photo_id)) map.set(row.photo_id, []);
+    map.get(row.photo_id).push(row);
+  }
+  return map;
+}
+
+if (!api.configured) {
+  message('Almost there', 'Add your Supabase project URL and anon key to js/config.js, then reload.');
+} else {
+  api.onAuthChange(boot);
+}

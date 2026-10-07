@@ -1,0 +1,7 @@
+.DS_Store
+.env
+pokemon-dashboard/
+pokemon-dashboard.zip
+*.app/
+photos/
+__pycache__/

@@ -1,49 +1,37 @@
-# Wedding Planner
+# Our Wedding Board
 
-A private decision-support app for our wedding — inspiration, colour, budget trade-offs, and vendor options in one place. Deliberately *not* a project-management tool: logistics, contracts, and the day-of timeline belong to the wedding planner.
+A shared inspiration board for us and our wedding planner: a photo gallery with tags, comments,
+and drawn markings that can be shown or hidden.
 
-## Running it
+- **Live site:** https://lisahoong.github.io/biggishday/
+- **Data:** Supabase project `wedding-board` (photos, tags, comments, markings, private photo storage)
 
-Double-click **Wedding Planner.app**. It opens in your browser with everything loaded.
+## Using it
 
-Don't open `index.html` directly — browsers treat `file://` pages as unique origins and block them from reading or writing local files, so photos and data won't load. The `.app` just serves this folder on `localhost`, which is a real origin. Quit the app (or close its window) to stop it.
+1. Open the site and enter the board password.
+2. Enter your name once per device. It's shown next to your comments, marks, and uploads.
+3. Click a photo to view it large, add tags, comment, or draw on it (**Draw** → pen / arrow / circle).
+   **Markings shown / hidden** toggles marks for your own view only.
 
-To save changes back to disk, click **Connect Folder** once and pick this `wedding` folder. Until then edits are kept in the browser and written out the moment you connect. Chrome remembers the grant.
+Edits save immediately. The other person sees them after refreshing.
 
-## Tabs
+## How it works
 
-| Tab | What it does |
-|---|---|
-| **Overview** | Budget rollup, decision progress per category, and gaps worth a second look |
-| **Inspiration** | Your tagged photos, filterable by tag; group them into boards |
-| **Palettes** | Build colour combinations, including sampling straight off a photo |
-| **Budget** | Costs by category, with a trade-off view and a what-if control |
-| **Vendors** | Options side by side, with style overlap against the inspiration board |
+- `index.html`, `style.css`, `js/` is a static app served by GitHub Pages; pushing to `main` deploys it.
+- `js/config.js` holds the Supabase URL, the publishable key, and the shared board account's email.
+  These are meant to be public. The board password is the secret, and row-level security in
+  `supabase/schema.sql` blocks all data until someone signs in with it.
+- Secrets (service key, database password, board password) live in `~/.wedding-board-secrets`
+  on Lisa's laptop, never in this repo.
 
-## How it hangs together
+## Local development
 
-The point of one app rather than several is that decisions cross-link:
+```
+python3 serve.py        # http://localhost:8765, talks to the same Supabase project
+```
 
-- **Categories are shared** between Budget and Vendors — one list, one set of IDs. Adding a category in either place makes it available in both.
-- **Booking a vendor writes to the budget**: status flips to `booked`, a locked-in cost appears in the matching category at the agreed price, and rival options in that category are marked `passed`.
-- **Style matching is real, not fuzzy**: vendor style tags are drawn from the same vocabulary as your photo tags, so "matches your board on 3 tags" is a set intersection over your actual photos.
-- **Locked vs flexible** is the spine of the budget. Only `booked` counts as locked; everything else stays in the flexible pool, which is what the trade-off view ranks when you need to find room.
+## Maintenance
 
-## Data
-
-Two files, both plain JSON you can read, diff, and back up:
-
-- `wedding-data.json` — settings, categories, budget items, vendor options, palettes, boards.
-- `photos/metadata.json` — one entry per photo. `tags` are yours; `suggestedTags` are written by the `/suggest-photo-tags` skill and kept strictly separate.
-
-Drop new images into `photos/` and they're picked up next time you open the app (or hit **Reload photos**). Run `/suggest-photo-tags` to have Claude look at the new ones and propose tags.
-
-## Code layout
-
-Plain HTML/CSS/JS loaded as classic scripts — deliberately *not* ES modules, since browsers block those over `file://`. Load order is set in `index.html`.
-
-- `js/ui.js` — shared render helpers (`el`, modal, toast, form fields)
-- `js/calc.js` — budget maths, pure functions, no DOM
-- `js/store.js` — reads/writes the folder via the File System Access API
-- `js/tab-*.js` — one per tab, each exposing `render(root, ctx)`
-- `js/app.js` — tab routing and folder connection
+- Change the board password: Supabase dashboard → Authentication → Users → `wedding-board@example.com`.
+- Bulk-import a folder of photos: put them in `photos/` and run
+  `set -a; . ~/.wedding-board-secrets; set +a; python3 scripts/import_photos.py` (skips already-imported files).

@@ -1,7 +1,0 @@
-#!/bin/bash
-# Serves the pokemon-dashboard folder on localhost and opens it in the browser.
-# Lives inside the pokemon-dashboard folder: ../../.. from here is the folder itself.
-ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
-PORT=8766
-( sleep 1; open "http://localhost:$PORT/index.html" ) &
-exec /usr/bin/env python3 "$ROOT/serve.py" "$PORT"
