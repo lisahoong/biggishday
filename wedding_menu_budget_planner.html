@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Menu &amp; Budget Planner — Fairmont Grand Del Mar</title>
+<style>
+  :root{
+    --gold:#a9834f;
+    --gold-dark:#7c5f38;
+    --cream:#faf6ef;
+    --card:#ffffff;
+    --blush:#f4e9e2;
+    --text:#2c2823;
+    --muted:#8a8378;
+    --line:#e6ddce;
+    --green:#4c7a5e;
+    --green-bg:#eaf3ee;
+    --red:#a8483c;
+    --red-bg:#f8ebe9;
+    --amber:#b9832f;
+    --amber-bg:#fbf1e2;
+    --radius:10px;
+    --shadow:0 1px 3px rgba(40,30,10,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--cream);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+    font-size:14.5px;
+    line-height:1.5;
+    padding-bottom:60px;
+  }
+  h1,h2,h3{font-family:Georgia,'Times New Roman',serif;font-weight:600;margin:0;}
+  a{color:var(--gold-dark);}
+
+  header.top{
+    text-align:center;
+    padding:28px 20px 18px;
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#fffdf9,var(--cream));
+  }
+  header.top h1{font-size:26px;color:var(--gold-dark);letter-spacing:0.5px;}
+  header.top .sub{color:var(--muted);font-size:12.5px;margin-top:6px;letter-spacing:0.5px;text-transform:uppercase;}
+
+  .control-bar{
+    position:sticky;top:0;z-index:50;
+    background:#fffdf9;
+    border-bottom:1px solid var(--line);
+    box-shadow:var(--shadow);
+    padding:12px 16px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px 24px;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .control-bar .inputs{display:flex;flex-wrap:wrap;gap:16px;align-items:center;}
+  .control-bar label{display:flex;flex-direction:column;font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.4px;gap:4px;}
+  .control-bar input[type=number]{
+    font-size:15px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;width:110px;
+    font-family:inherit;color:var(--text);background:#fff;
+  }
+  .control-bar .totals{display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:220px;}
+  .control-bar .totals .grand{font-size:19px;font-weight:700;color:var(--gold-dark);font-family:Georgia,serif;}
+  .control-bar .totals .per-guest{font-size:12px;color:var(--muted);}
+  .progress-wrap{width:220px;height:8px;background:var(--line);border-radius:5px;overflow:hidden;}
+  .progress-bar{height:100%;background:var(--gold);transition:width .2s;}
+  .progress-bar.over{background:var(--red);}
+  .budget-msg{font-size:11.5px;margin-top:2px;}
+  .budget-msg.over{color:var(--red);font-weight:600;}
+  .budget-msg.under{color:var(--green);}
+
+  nav.tabs{
+    display:flex;overflow-x:auto;gap:4px;padding:10px 16px;background:#fff;
+    border-bottom:1px solid var(--line);position:sticky;top:64px;z-index:40;
+  }
+  nav.tabs button{
+    white-space:nowrap;border:1px solid transparent;background:transparent;color:var(--muted);
+    padding:8px 14px;border-radius:20px;font-size:13px;cursor:pointer;font-weight:600;
+    transition:all .15s;
+  }
+  nav.tabs button:hover{background:var(--blush);color:var(--text);}
+  nav.tabs button.active{background:var(--gold);color:#fff;}
+
+  main{max-width:980px;margin:0 auto;padding:22px 16px 80px;}
+  section.tab-panel{display:none;}
+  section.tab-panel.active{display:block;animation:fade .18s ease;}
+  @keyframes fade{from{opacity:0;}to{opacity:1;}}
+
+  .section-intro{margin-bottom:18px;padding:14px 16px;background:var(--blush);border-radius:var(--radius);font-size:13px;color:#5a4f3f;}
+  .section-intro b{color:var(--gold-dark);}
+
+  .headcount-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+  .headcount-row label{font-size:12.5px;color:var(--muted);font-weight:600;}
+  .headcount-row input{width:90px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;font-size:14px;}
+  .headcount-row button{
+    font-size:11.5px;padding:5px 10px;border-radius:16px;border:1px solid var(--gold);
+    background:#fff;color:var(--gold-dark);cursor:pointer;font-weight:600;
+  }
+  .headcount-row button:hover{background:var(--blush);}
+
+  h2.cat-title{font-size:19px;color:var(--gold-dark);margin:26px 0 4px;padding-bottom:6px;border-bottom:2px solid var(--blush);}
+  h2.cat-title:first-of-type{margin-top:0;}
+  .cat-note{font-size:12px;color:var(--muted);margin-bottom:10px;font-style:italic;}
+
+  .item-grid{display:flex;flex-direction:column;gap:8px;}
+  .item-card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:10px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    transition:border-color .15s, background .15s;
+  }
+  .item-card.checked{border-color:var(--gold);background:#fffaf2;}
+  .item-card .chk{flex-shrink:0;width:18px;height:18px;accent-color:var(--gold);cursor:pointer;}
+  .item-main{flex:1;min-width:180px;}
+  .item-name{font-weight:600;font-size:14px;}
+  .item-desc{font-size:12px;color:var(--muted);margin-top:1px;}
+  .tags{display:inline-flex;gap:4px;margin-left:6px;vertical-align:middle;}
+  .tag{font-size:9.5px;font-weight:700;color:var(--gold-dark);background:var(--blush);border-radius:8px;padding:1px 6px;letter-spacing:0.3px;}
+  .item-price{font-size:12.5px;color:var(--muted);white-space:nowrap;}
+  .item-controls{display:flex;align-items:center;gap:6px;white-space:nowrap;}
+  .item-controls input[type=number]{width:64px;padding:5px 6px;border:1px solid var(--line);border-radius:6px;font-size:13.5px;}
+  .item-controls .unit-label{font-size:11.5px;color:var(--muted);}
+  .item-cost{min-width:90px;text-align:right;font-weight:700;font-size:14px;color:var(--gold-dark);}
+  .item-card.disabled .item-cost{color:var(--muted);}
+  .badge-attendant{font-size:9.5px;color:var(--amber);border:1px solid var(--amber);border-radius:8px;padding:1px 6px;margin-left:4px;}
+
+  .radio-item{display:flex;align-items:center;gap:12px;}
+  .radio-item input[type=radio]{width:17px;height:17px;accent-color:var(--gold);}
+
+  .wine-group{margin-bottom:14px;}
+  .wine-group summary{cursor:pointer;font-weight:700;color:var(--gold-dark);font-size:14px;padding:8px 0;}
+
+  .other-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;}
+  .other-row input[type=text]{flex:2;min-width:160px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;}
+  .other-row select{flex:1;min-width:130px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;}
+  .other-row input[type=number]{width:110px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;}
+  .other-row button.del{background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:2px 8px;}
+  .add-row-btn{margin-top:6px;font-size:12.5px;padding:7px 14px;border-radius:18px;border:1px solid var(--gold);background:#fff;color:var(--gold-dark);cursor:pointer;font-weight:600;}
+  .add-row-btn:hover{background:var(--blush);}
+
+  table.summary-table{width:100%;border-collapse:collapse;margin-top:8px;}
+  table.summary-table th, table.summary-table td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);font-size:13.5px;}
+  table.summary-table th{color:var(--muted);text-transform:uppercase;font-size:10.5px;letter-spacing:0.4px;}
+  table.summary-table td.num, table.summary-table th.num{text-align:right;font-variant-numeric:tabular-nums;}
+  table.summary-table tr.subtotal td{font-weight:700;border-top:2px solid var(--gold);}
+  table.summary-table tr.grandtotal td{font-weight:800;font-size:16px;color:var(--gold-dark);border-top:2px solid var(--gold-dark);}
+  .empty-row td{color:var(--muted);font-style:italic;}
+
+  .fees-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+  .fees-card h3{font-size:14.5px;color:var(--gold-dark);margin-bottom:8px;}
+  .fees-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--line);flex-wrap:wrap;}
+  .fees-row:last-child{border-bottom:none;}
+  .fees-row .label{font-size:13px;}
+  .fees-row .label small{display:block;color:var(--muted);font-size:11px;}
+  .fees-row .val{font-weight:700;color:var(--gold-dark);}
+  .fees-row input[type=number]{width:90px;padding:5px 6px;border:1px solid var(--line);border-radius:6px;}
+
+  .print-btn, .reset-btn{
+    font-size:12.5px;padding:8px 16px;border-radius:18px;cursor:pointer;font-weight:600;border:1px solid var(--gold);
+    background:var(--gold);color:#fff;margin-right:8px;
+  }
+  .reset-btn{background:#fff;color:var(--red);border-color:var(--red);}
+  .print-btn:hover{background:var(--gold-dark);}
+  .reset-btn:hover{background:var(--red-bg);}
+
+  footer.note{max-width:980px;margin:30px auto 0;padding:16px;font-size:11.5px;color:var(--muted);text-align:center;border-top:1px solid var(--line);}
+
+  @media print{
+    .control-bar, nav.tabs, .print-btn, .reset-btn, .headcount-row button{display:none !important;}
+    section.tab-panel{display:block !important;}
+    body{padding:0;}
+  }
+  @media (max-width:640px){
+    .control-bar{flex-direction:column;align-items:stretch;}
+    .control-bar .totals{align-items:flex-start;}
+    .item-cost{min-width:auto;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>Wedding Menu &amp; Budget Planner</h1>
+  <div class="sub">Fairmont Grand Del Mar · Wedding Menus 2026</div>
+</header>
+
+<div class="control-bar">
+  <div class="inputs">
+    <label>Guest Count
+      <input type="number" id="guestCount" min="0" value="0">
+    </label>
+    <label>Budget Target ($)
+      <input type="number" id="budgetTarget" min="0" step="100" value="0" placeholder="optional">
+    </label>
+    <div>
+      <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
+      <button class="reset-btn" id="resetBtn">Reset All</button>
+    </div>
+  </div>
+  <div class="totals">
+    <div class="grand" id="grandTotalDisplay">$0</div>
+    <div class="per-guest" id="perGuestDisplay">Estimated total incl. service &amp; tax</div>
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+    <div class="budget-msg" id="budgetMsg"></div>
+  </div>
+</div>
+
+<nav class="tabs" id="tabsNav"></nav>
+
+<main id="mainContent"></main>
+
+<footer class="note">
+  Built from the Fairmont Grand Del Mar 2026 Wedding Menus PDF. Prices are per guest unless noted and subject to a 26% taxable service charge plus 7.75% CA sales tax, and are subject to change by the venue without notice. This planner gives estimates for budgeting purposes only — confirm final pricing with your Catering/Events Manager. Your entries are saved automatically in this browser.
+</footer>
+
+<script>
+/* ============================= DATA ============================= */
+
+const TAGS_INFO = {GF:'Gluten Free', VE:'Vegetarian', V:'Vegan', VG:'Vegetarian'};
+
+function tagHtml(tags){
+  if(!tags || !tags.length) return '';
+  return '<span class="tags">' + tags.map(t=>`<span class="tag" title="${TAGS_INFO[t]||t}">${t}</span>`).join('') + '</span>';
+}
+
+// ---- Passed Hors d'Oeuvres (min 2 dozen per selection) ----
+const PASSED_COLD = [
+  {n:'Cucumber', d:'tiny crudité, dill', p:14, tags:['GF','VE','V']},
+  {n:'Cauliflower Panna Cotta', d:'truffle', p:14, tags:['GF','VE']},
+  {n:'Fig and Walnut', d:'torched fig, fig jam, california goat cheese, walnut', p:14, tags:['GF','VE']},
+  {n:'Caramelized Onion Tart', d:'grana padano, chive', p:14, tags:['VE']},
+  {n:'Watermelon and Goat Cheese', d:'extra virgin olive oil, fleur de sel', p:14, tags:['GF','VE']},
+  {n:'Heirloom Tomato Tart', d:'ricotta, balsamic', p:14, tags:['VE']},
+  {n:'Chilled Vegetable Roll', d:'rice paper, chili', p:14, tags:['GF','VE','V']},
+  {n:'Beetroot Macaroon', d:'goat cheese', p:14, tags:['GF','VE']},
+  {n:'Herbed Goat Cheese Gougères', d:'rosemary, lemon', p:14, tags:['VE']},
+  {n:'Compressed Melon and Prosciutto', d:'mint, balsamic', p:14, tags:['GF']},
+  {n:'Duck Liver Pate', d:'port wine jelly', p:16, tags:[]},
+  {n:'Dungeness Crab', d:'citrus, apple, fennel', p:18, tags:[]},
+  {n:'Citrus Poached Prawn', d:'marie rose sauce', p:16, tags:['GF']},
+  {n:'Ahi Tuna Cone', d:'sesame, cilantro', p:15, tags:[]},
+  {n:'Salmon Wrapped West Coast Oyster', d:'radish, keta caviar', p:16, tags:['GF']},
+];
+const PASSED_HOT = [
+  {n:'Herb Arancini', d:'truffle aioli', p:14, tags:['VE']},
+  {n:'Tempura Artichoke', d:'tamarind glaze', p:14, tags:['VE','V']},
+  {n:'Vegetable Samosa', d:'mint chutney', p:14, tags:['VE','V']},
+  {n:'Crispy Vegetable Spring Roll', d:'soy honey', p:14, tags:['VE']},
+  {n:'Chickpea Fritter', d:'citrus herb aioli', p:14, tags:['GF','VE','V']},
+  {n:'Lemon Grass Chicken Skewer', d:'coconut peanut sauce', p:16, tags:['GF']},
+  {n:'Soy Ginger Beef Skewer', d:'crispy shallot', p:16, tags:['GF']},
+  {n:'Lamb Gyro', d:'pita, sumac onion, marinated feta', p:15, tags:[]},
+  {n:'Comte Cheese Fritter', d:'truffle jam', p:16, tags:['VE']},
+  {n:'Braised Beef Short Rib Croquette', d:'horseradish, black pepper', p:16, tags:[]},
+  {n:'Tempura Prawn', d:'togarashi aioli', p:16, tags:[]},
+  {n:'Crab Cake', d:'preserved lemon aioli', p:18, tags:[]},
+  {n:'Tempura Morel Mushroom', d:'truffle, brie', p:17, tags:['VE']},
+  {n:'Mini Beef Wellington', d:'mushroom duxelle, puff pastry', p:15, tags:[]},
+];
+const PASSED_SWEET = [
+  {n:'Liquid Bonbon', d:'exotic fruit, champagne', p:13, tags:['VE']},
+  {n:'Mini Chocolate Tart', d:'caramel foam, fleur de sel', p:13, tags:['VE']},
+  {n:'Profiterole', d:'vanilla cream, strawberry', p:13, tags:['VE']},
+];
+
+// ---- Reception Stations on Display (per person, 2 hrs, min 30 guests) ----
+const STATIONS = [
+  {n:'Cheese and Charcuterie', d:'artisanal cheese &amp; charcuterie, grapes, olives, nuts, pickles, preserves, mustard, honeycomb, breads & crackers', p:57, attendant:false},
+  {n:'Charcuterie', d:'artisanal charcuterie, pickles, cornichons, olives, preserves, mustard, honeycomb, breads & crackers', p:55, attendant:false},
+  {n:'Cheese', d:'continental & california artisanal cheese, grapes, nuts, preserves, honeycomb, breads & crackers', p:46, attendant:false, tags:['VE']},
+  {n:'Caviar on Ice', d:'petrossian caviar, salmon roe, tobiko roe, shallot, egg, crème fraiche, chives, blinis', p:145, attendant:true},
+  {n:'Daily Catch Seafood Display', d:'prawns, oysters, mussels, crab claws, smoked salmon, charred tuna, lobster & tarragon salad, scallop & chive salad, bay shrimp & dill salad', p:94, attendant:false},
+  {n:'Mezze Table', d:'hummus, tabbouleh, tzatziki, baba ganoush, pickles, dolmades, olives, grilled vegetables, falafel, pita', p:34, attendant:false, tags:['VE']},
+  {n:'Fire Roasted Kebab and Mezze Table', d:'chicken, lamb kofta, vegetable kebabs + mezze table', p:54, attendant:true},
+  {n:'Fresh Baja California Ceviche and Agua Chile', d:'daily catch & shrimp, lime, tomato, mango, papaya, avocado, jicama, tortilla chips', p:75, attendant:false},
+  {n:'Grand Social Woodfire Pizza', d:'margherita, mushroom, n\'duja shishito', p:42, attendant:true},
+  {n:'Tijuana Taco Stand', d:'al pastor, carne asada, daily catch, elotes, salsas', p:49, attendant:true},
+  {n:'Little Italy Pasta Station', d:'tortellini, penne, orecchiette, bucatini cacio e pepe, sauces', p:42, attendant:true},
+  {n:'Ramen Station', d:'pork belly, chicken, classic ramen noodle, molten egg, toppings', p:46, attendant:true},
+];
+const OYSTER_BAR = {n:'Oyster Bar', d:'horseradish, mignonette, lemon, cocktail sauce — priced per dozen, 5-dozen increments', p:95};
+
+// ---- Reception Carvery (flat price each) ----
+const CARVERY = [
+  {n:'Cedar Roasted King Salmon', d:'maple thyme & black pepper glaze', p:475, serves:25, tags:[]},
+  {n:'Porchetta Carving Station', d:'herbaceous mustard, salsa verde', p:475, serves:40, tags:['GF']},
+  {n:'Rosemary Rubbed Leg of Lamb', d:'garlic confit, minted jus', p:575, serves:30, tags:['GF']},
+  {n:'USDA Prime Striploin', d:'grainy mustard, horseradish, peppercorn sauce', p:685, serves:30, tags:['GF']},
+  {n:'Tomahawk Beef Rib Eye', d:'red wine jus, mustard, horseradish', p:1245, serves:50, tags:['GF']},
+];
+const CARVING_ENHANCEMENTS = [
+  {n:'Grilled Asparagus', p:12}, {n:'Roasted Root Vegetables', p:12}, {n:'Mashed Potatoes', p:12},
+  {n:'House Spiced Fries', p:11}, {n:'Grilled Zucchini', p:12},
+];
+
+// ---- Ceremony Refreshments (per gallon / per bottle) ----
+const CEREMONY_REFRESH = [
+  {n:'Lavender Lemonade', p:125, unit:'gallon'},
+  {n:'Strawberry Lemonade', p:125, unit:'gallon'},
+  {n:'Lemon Iced Tea', p:135, unit:'gallon'},
+  {n:'Honey Raspberry Sweet Tea', p:135, unit:'gallon'},
+  {n:'Kombucha (pomegranate / pink lady apple)', p:15, unit:'bottle'},
+  {n:'Evian Still/Sparkling 330ml', p:9, unit:'bottle'},
+  {n:'Evian Still/Sparkling 750ml', p:12, unit:'bottle'},
+];
+
+// ---- Dessert Stations (per person) ----
+const DESSERT_STATIONS = [
+  {n:'Grilled Fruit and Ice Cream', d:'grilled fresh fruit, preserved fruits, ice creams & sorbets', p:29, attendant:true},
+  {n:'Boba Station', d:'green/black tea, thai milk tea, popping boba, jellies', p:28, attendant:false},
+  {n:'Churro Station', d:'spiced chocolate sauce, dulce de leche, ice creams', p:29, attendant:true},
+  {n:'S\'mores Station', d:'marshmallows, chocolate, graham crackers', p:34, attendant:false},
+];
+const GOOD_THING_ITEMS = ['Tiramisu','Vanilla Bean Panna Cotta (GF)','Amaretti Cookies','Madeleines (vanilla, chocolate or matcha)','Spiced Chocolate Tart','Churros','Seasonal Fruit Empanada','Citrus Tart','Strawberry Shortcake','Assorted Profiteroles','Chocolate Rocher','Assorted Financier','Seasonal Fruit Tart','Peanut Caramel Crunch'];
+
+// ---- Plated Dinner ----
+const SOUPS = ['Lobster Bisque (GF)','Sweet Corn Soup (GF, VE)','Jerusalem Artichoke Soup (GF, VE)','Truffled Celeriac Veloute (VE)','Calsbad Strawberry Gazpacho (VE)'];
+const SALADS = ['Heirloom Tomato — burrata, basil (GF, VE)','Baby Beet — goat cheese, orange (GF, VE)','Caramelized Fig — goat cheese, walnuts (GF, VE)','Iceberg Waldorf — grapes, blue cheese (GF, VE)','California Chicory — blood orange, ricotta (GF, VE)'];
+const CHILLED_STARTERS = ['Asparagus — citrus gremolata (GF, VE)','Sage Hill Farm Carrots — fromage blanc (GF, VE)','Beef Tartar — pickled mustard, confit yolk (GF)','Compressed Melon — chorizo, labneh (GF)','Beet Cured Salmon — horseradish crème (GF)'];
+const WARM_STARTERS = ['Pan Seared Scallops — cauliflower, truffle (GF)','Foraged Mushroom Tart — goat cheese (GF, VE)','Dungeness Crab Cake — kohlrabi, yuzu aioli','English Pea Risotto — fava beans'];
+const PASTA_COURSE = ['Sweet Corn Ravioli — ham hock, pecorino','Celeriac Tortellini — truffle, parmesan (VE)','Squash Ravioli — sage butter, pepitas (VE)'];
+const INTERMEZZO = ['Green Apple Basil Sorbet (GF, VE, V)','Strawberry Champagne Sorbet (GF, VE, V)','Passion Fruit, Mango, Orange Soup (GF, VE, V)'];
+const MAINS = {
+  Sea:[ {n:'Chilean Sea Bass', d:'sprouting broccoli, tidal vegetables, leek fumet', p:179},
+        {n:'King Salmon', d:'wilted greens, clams, chorizo, saffron clam nage', p:145},
+        {n:'California Halibut', d:'ratatouille, fried kale, garlic chips', p:165},
+        {n:'Sablefish', d:'edamame, radish, kelp butter', p:175} ],
+  Land:[ {n:'Beef Fillet', d:'potato pave, heirloom carrot, forest mushroom', p:175},
+        {n:'Duck Breast', d:'sunchoke, beetroot, amaranth', p:168},
+        {n:'Lemon Chicken Breast', d:'savoy cabbage, thumbelina carrots', p:156},
+        {n:'Beef Short Rib', d:'broccolini, caramelized onion, potato puree', p:162},
+        {n:'Lamb', d:'loin, leg, zucchini, labneh, pomegranate', p:174} ],
+  Field:[ {n:'Cauliflower', d:'puree, pickled, crumble, fresh', p:142},
+        {n:'Soft Polenta', d:'ash ripened goat cheese, tempura courgette', p:142},
+        {n:'Market Vegetable Strudel', d:'vegan phyllo, roasted pepper sauce', p:142} ],
+};
+const PLATED_DESSERTS = ['Black Forest Cake — preserved cherry, cocoa nib kirsch bavarian','Coconut Bavarian — mango confit, pineapple, lime','Calamansi Tart — pandan, ginger, ube jam','Cereal Milk Panna Cotta — yogurt, roasted strawberry, pistachio'];
+
+// ---- Beverages ----
+const HOURLY_PKG = {
+  single:{Premium:42, Luxury:55, Grand:70},
+  two:{Premium:68, Luxury:90, Grand:130},
+  addl:{Premium:30, Luxury:40, Grand:60},
+};
+const CONSUMPTION_HOSTED = {Premium:19, Luxury:23, Grand:29};
+
+const SIGNATURE_COCKTAILS = [
+  {n:'The Grand Margarita', d:'Herradura Silver Tequila, lime, agave, Cointreau', p:24},
+  {n:'Canyon Old Fashioned', d:'Old Forrester 86 Bourbon, orange & cardamom bitters', p:25},
+  {n:'Del Mar Derby', d:'Tito\'s Vodka, grapefruit, gingerale, mint', p:24},
+  {n:'Hibiscus Citrus', d:'Beefeater Gin, lime, hibiscus, ginger beer', p:26},
+];
+const CHAMPAGNE_COCKTAILS = [
+  {n:'Mexicali Mimosa', d:'Don Julio Tequila, orange/lime, mango, Prosecco', p:24},
+  {n:'Carlsbad 75', d:'Hendricks Gin, lemon, strawberry, Chandon Brut', p:23},
+  {n:'Race Track Royale', d:'Chandon Brut, pomegranate, basil', p:22},
+];
+const NO_PROOF_COCKTAILS = [
+  {n:'Grapefruit Mai Tai', p:16}, {n:'The Medicine', p:16}, {n:'Blackberry Collins', p:16}, {n:'Pink Lady', p:16},
+];
+const SPECIALTY_TEQUILAS = [
+  {n:'Patron Silver', p:20}, {n:'Volcan Blanco', p:22}, {n:'Don Julio Reposado', p:24}, {n:'Casamigos Añejo', p:30}, {n:'The Producer Ensemble Mezcal', p:18},
+];
+const CORDIALS = [
+  {n:'Amaretto – Disaronno', p:21}, {n:'Baileys Irish Cream', p:21}, {n:'Frangelico', p:21}, {n:'Kahlua', p:21}, {n:'Grand Marnier', p:21},
+  {n:'Hardy VSOP Cognac', p:24}, {n:'Remy Martin VSOP Cognac', p:30},
+];
+
+const WINES = {
+  'Sparkling Wine & Champagne':[
+    {n:'Prosecco, Brut, Mionetto, Veneto, Italy', p:80},
+    {n:'Sparkling Brut, Chandon, California', p:100},
+    {n:'Blanc de Blanc Brut, Schramsberg, North Coast, California', p:155},
+    {n:'Champagne Brut, Nicolas Feuillatte, Reims, France', p:165},
+    {n:'Champagne Brut, Veuve Clicquot Yellow Label, Reims, France', p:210},
+    {n:'Champagne Brut, Perrier-Jouet, Reims, France', p:245},
+    {n:'Champagne Brut, Moët and Chandon "Imperial", Épernay, France', p:255},
+    {n:'Champagne Brut Rosé, Moët and Chandon, Épernay, France', p:265},
+    {n:'Champagne Brut, Veuve Clicquot Rose, Reims, France', p:295},
+    {n:'Champagne Brut, Louis Roederer Cristal, Reims, France', p:950},
+  ],
+  'Sauvignon Blanc':[
+    {n:'\'The Grand Del Mar\' Private Label, California', p:80},
+    {n:'Silver Gate Vineyards, California', p:80},
+    {n:'Massey Dacta, Marlborough, New Zealand', p:99},
+    {n:'\'Decoy\' by Duckhorn, California', p:100},
+    {n:'Justin, Paso Robles, California', p:110},
+    {n:'Martin Ray, Sonoma County, California', p:120},
+    {n:'Jacques Dumont, Sancerre, France', p:125},
+    {n:'Cakebread, Napa Valley, California', p:135},
+  ],
+  'Chardonnay':[
+    {n:'\'The Grand Del Mar\' Private Label, California', p:80},
+    {n:'EOS, California', p:80},
+    {n:'Kendall-Jackson, Vintner\'s Reserve, California', p:100},
+    {n:'Thomas Labille, Premier Cru, Mont Millieu, Chablis, France', p:110},
+    {n:'Martin Ray, Sonoma Coast, California', p:120},
+    {n:'Frank Family, Napa Valley, California', p:125},
+    {n:'Cakebread, Napa Valley, California', p:140},
+    {n:'Far Niente, Napa Valley, California', p:220},
+    {n:'Château Montelena, Napa Valley, California', p:275},
+  ],
+  'Rosé':[
+    {n:'St. Marguerite Symphanie Rosé, Côtes de Provence, France', p:90},
+    {n:'Martin Ray, Sonoma County, California', p:120},
+    {n:'Chateau d\'Estoublon, "Roseblood", Provence, France', p:120},
+  ],
+  'Pinot Noir':[
+    {n:'\'The Grand Del Mar\' Private Label, California', p:80},
+    {n:'EOS, California', p:80},
+    {n:'Davis Bynum, Russian River Valley, California', p:95},
+    {n:'\'Decoy\' by Duckhorn, California', p:100},
+    {n:'Ken Wright Cellars, Willamette Valley, Oregon', p:110},
+    {n:'Martin Ray, Sonoma Coast, California', p:120},
+    {n:'Brewer-Clifton, Santa Rita Hills, Santa Barbara, California', p:130},
+    {n:'Shea Wine Cellars, Willamette Valley, Oregon', p:150},
+    {n:'Flowers, Sonoma Coast, California', p:165},
+    {n:'En Route, Russian River Valley, California', p:185},
+    {n:'Maison Joseph Drouhin, Macon-Villages, Burgundy, France', p:220},
+  ],
+  'Cabernet Sauvignon':[
+    {n:'\'The Grand Del Mar\' Private Label, California', p:80},
+    {n:'Silver Gate Vineyards, California', p:80},
+    {n:'Carmel Road, California', p:100},
+    {n:'Justin, Paso Robles, California', p:105},
+    {n:'Martin Ray, Sonoma County, California', p:120},
+    {n:'Saddleback Cellars, Napa Valley, California', p:135},
+    {n:'Daou "Reserve", Paso Robles, California', p:140},
+    {n:'Frank Family, Napa Valley, California', p:165},
+    {n:'Groth, Oakville, Napa Valley, California', p:215},
+    {n:'Stag\'s Leap Wine Cellars, Napa Valley, California', p:270},
+    {n:'Silver Oak, Alexander Valley, California', p:275},
+    {n:'Shafer "1.5", Napa Valley, California', p:475},
+    {n:'Silver Oak, Napa Valley, California', p:650},
+  ],
+  'Bordeaux Blends':[
+    {n:'Château Franc Patarabet, Saint-Émilion Grand Cru, France', p:145},
+    {n:'Château Soussans, Margaux, France', p:160},
+    {n:'Justin "Isoceles", Paso Robles, California', p:225},
+  ],
+};
+
+// ---- Late Night ----
+const LATE_NIGHT_STATIONS = [
+  {n:'Nacho Bar', d:'tortilla chips, cheese sauce, braised beef, shredded chicken', p:34},
+  {n:'On the Boarder Taqueria', d:'carne asada, carnitas, baja shrimp', p:49},
+  {n:'Slider Station', d:'falafel, beef, fried chicken sliders', p:42},
+  {n:'Fries Station', d:'kennebec fries, sweet potato fries, loaded tater tots', p:28},
+  {n:'Chicken Wings', d:'thai glaze, buffalo-style, lemon pepper', p:36},
+];
+const LATE_NIGHT_DOZEN = [
+  {n:'Beignets (vanilla sugar)', p:72},
+  {n:'Chocolate Chip Cookies', p:88},
+  {n:'Mini Market Fruit Tarts', p:180},
+];
+
+// ---- Getting Ready Room ----
+const GETTING_READY_BITES = [
+  {n:'Smoked Salmon Bagel', p:34}, {n:'Egg White Frittata', p:32}, {n:'Breakfast Burrito', p:28},
+  {n:'Breakfast Sandwich', p:32}, {n:'Seasonal Farmers Market Fruit Plate', p:16},
+  {n:'Sides (bacon / chicken apple sausage)', p:11}, {n:'Eggs', p:8}, {n:'Fries', p:9},
+];
+const GETTING_READY_DOZEN = [
+  {n:'Bagels (assorted)', p:88}, {n:'Freshly Baked Viennoiserie', p:88}, {n:'Homemade Cookie Selection', p:88},
+];
+const GETTING_READY_SALADS = [ {n:'Classic Caesar', p:24}, {n:'Superfood Salad', p:26} ];
+const GETTING_READY_SANDWICHES = [
+  {n:'Club Sandwich', p:31}, {n:'Smash Burger', p:35}, {n:'Chicken Caesar Wrap', p:31}, {n:'Falafel Pita', p:35},
+];
+const GETTING_READY_BEVERAGES = [
+  {n:'Coffee (regular & decaf)', p:140, unit:'gallon'}, {n:'Assorted Hot Teas', p:125, unit:'gallon'},
+  {n:'Lemonade', p:120, unit:'gallon'}, {n:'Iced Tea', p:135, unit:'gallon'},
+  {n:'Diet/Regular Soft Drinks', p:8, unit:'each'}, {n:'Still/Sparkling Water 330ml', p:8, unit:'each'},
+  {n:'Still/Sparkling Water 750ml', p:11, unit:'each'}, {n:'Red Bull', p:15, unit:'each'},
+  {n:'Fruit-Infused Spa Water', p:45, unit:'gallon'},
+];
+
+// ---- Brunch ----
+const BRUNCH_BUFFETS = [
+  {n:'Continental Pantry', d:'juices, fruit, yogurt bar, pastries, toast bar, granola/cereal', p:62},
+  {n:'The Grand', d:'Continental Pantry + scrambled eggs, bacon, sausages, roast potatoes', p:72},
+  {n:'Del Mar', d:'lighter fare: bircher muesli, chia pudding, egg white scramble, turkey sausage', p:72},
+];
+const BRUNCH_LIVE = [
+  {n:'Live Breakfast Egg Station', d:'omelette / free run eggs, choice of fillings (add-on to buffet)', p:20, attendant:true},
+  {n:'Smoothie Station', d:'peach mango, triple berry, pineapple coconut, almond milk pb', p:24, attendant:true},
+  {n:'Tartine Station', d:'avocado toast, smoked salmon, honey mascarpone', p:24, attendant:false},
+];
+const BRUNCH_ENHANCEMENTS = [
+  {n:'Fresh Squeezed Juice (antioxidant/beetroot/carrot)', p:16},
+  {n:'International Cheese Selection + Baguette', p:46},
+  {n:'Steel Cut Oats', p:15},
+  {n:'Cinnamon Brioche French Toast', p:22},
+  {n:'Pancakes with Berries and Maple Syrup', p:22},
+  {n:'Smoked Salmon (capers, cream cheese, red onion)', p:24},
+  {n:'Breakfast Burrito', p:18},
+  {n:'Chicken Apple Sausage', p:9},
+  {n:'Eggs Benedict', p:32},
+  {n:'Caviar Topped Eggs Benedict', p:45},
+];
+
+/* ============================= STATE ============================= */
+
+const LS_KEY = 'weddingMenuPlannerV1';
+
+let state = {
+  guestCount: 150,
+  budgetTarget: 0,
+  headcounts: {}, // per-section override headcounts
+  items: {},      // id -> {checked, qty}
+  radios: {},     // groupId -> selected value
+  otherCosts: [],
+  wineQty: {},    // wine name -> qty bottles
+  nextOtherId: 1,
+};
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      state = Object.assign(state, parsed);
+    }
+  }catch(e){ console.warn('Could not load saved data', e); }
+}
+function saveState(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+function getItem(id, def){
+  if(!state.items[id]) state.items[id] = Object.assign({}, def);
+  return state.items[id];
+}
+function getHeadcount(sectionId){
+  if(state.headcounts[sectionId] === undefined) state.headcounts[sectionId] = state.guestCount;
+  return state.headcounts[sectionId];
+}
+function setHeadcount(sectionId, val){
+  state.headcounts[sectionId] = Math.max(0, parseInt(val)||0);
+}
+
+const fmt = (n) => {
+  n = Math.round(n*100)/100;
+  return '$' + n.toLocaleString('en-US', {minimumFractionDigits: n%1===0?0:2, maximumFractionDigits:2});
+};
+
+/* ============================= RENDER HELPERS ============================= */
+
+function el(tag, cls, html){
+  const e = document.createElement(tag);
+  if(cls) e.className = cls;
+  if(html!==undefined) e.innerHTML = html;
+  return e;
+}
+
+function slug(str){ return str.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,''); }
+
+// Checkbox item priced per guest (uses a headcount getter function)
+function renderPerGuestItem(container, id, name, desc, price, headcountFn, tags, attendant){
+  const data = getItem(id, {checked:false});
+  const card = el('div', 'item-card' + (data.checked?' checked':''));
+  const cost = data.checked ? price * headcountFn() : 0;
+  card.innerHTML = `
+    <input type="checkbox" class="chk" ${data.checked?'checked':''}>
+    <div class="item-main">
+      <span class="item-name">${name}</span>${tagHtml(tags)}${attendant?'<span class="badge-attendant">Chef Attendant Req.</span>':''}
+      ${desc?`<div class="item-desc">${desc}</div>`:''}
+    </div>
+    <div class="item-price">${fmt(price)} / guest</div>
+    <div class="item-cost">${fmt(cost)}</div>
+  `;
+  card.querySelector('.chk').addEventListener('change', (e)=>{
+    data.checked = e.target.checked;
+    saveState(); renderAll();
+  });
+  container.appendChild(card);
+}
+
+// Radio group item (single-select), priced per guest
+function renderRadioItem(container, groupId, value, name, desc, price, headcountFn, tags){
+  const selected = state.radios[groupId];
+  const isChecked = selected === value;
+  const card = el('div', 'item-card' + (isChecked?' checked':''));
+  const cost = isChecked ? price * headcountFn() : 0;
+  card.innerHTML = `
+    <div class="radio-item"><input type="radio" name="${groupId}" ${isChecked?'checked':''}></div>
+    <div class="item-main">
+      <span class="item-name">${name}</span>${tagHtml(tags)}
+      ${desc?`<div class="item-desc">${desc}</div>`:''}
+    </div>
+    <div class="item-price">${fmt(price)} / guest</div>
+    <div class="item-cost">${fmt(cost)}</div>
+  `;
+  card.querySelector('input[type=radio]').addEventListener('change', ()=>{
+    state.radios[groupId] = value;
+    saveState(); renderAll();
+  });
+  container.appendChild(card);
+}
+function renderRadioNone(container, groupId, label){
+  const selected = state.radios[groupId];
+  const isChecked = !selected;
+  const card = el('div', 'item-card' + (isChecked?' checked':''));
+  card.innerHTML = `
+    <div class="radio-item"><input type="radio" name="${groupId}" ${isChecked?'checked':''}></div>
+    <div class="item-main"><span class="item-name">${label || 'None selected'}</span></div>
+    <div class="item-cost">$0</div>
+  `;
+  card.querySelector('input[type=radio]').addEventListener('change', ()=>{
+    state.radios[groupId] = '';
+    saveState(); renderAll();
+  });
+  container.appendChild(card);
+}
+
+// Checkbox + dozens quantity (min dozens), price per piece
+function renderDozenItem(container, id, name, desc, pricePerPiece, tags, minDozen){
+  minDozen = minDozen || 2;
+  const data = getItem(id, {checked:false, dozens:minDozen});
+  const card = el('div', 'item-card' + (data.checked?' checked':''));
+  const cost = data.checked ? pricePerPiece * 12 * (data.dozens||0) : 0;
+  card.innerHTML = `
+    <input type="checkbox" class="chk" ${data.checked?'checked':''}>
+    <div class="item-main">
+      <span class="item-name">${name}</span>${tagHtml(tags)}
+      ${desc?`<div class="item-desc">${desc}</div>`:''}
+    </div>
+    <div class="item-price">${fmt(pricePerPiece)} / piece</div>
+    <div class="item-controls">
+      <input type="number" class="qty" min="${minDozen}" step="1" value="${data.dozens}" ${data.checked?'':'disabled'}>
+      <span class="unit-label">dozen (min ${minDozen})</span>
+    </div>
+    <div class="item-cost">${fmt(cost)}</div>
+  `;
+  card.querySelector('.chk').addEventListener('change', (e)=>{
+    data.checked = e.target.checked;
+    if(data.checked && (!data.dozens || data.dozens < minDozen)) data.dozens = minDozen;
+    saveState(); renderAll();
+  });
+  card.querySelector('.qty').addEventListener('input', (e)=>{
+    let v = parseInt(e.target.value)||minDozen;
+    if(v < minDozen) v = minDozen;
+    data.dozens = v;
+    saveState(); renderAll();
+  });
+  container.appendChild(card);
+}
+
+// Free-quantity numeric item (flat each) e.g. carvery
+function renderFlatQtyItem(container, id, name, desc, price, extraNote){
+  const data = getItem(id, {qty:0});
+  const card = el('div', 'item-card' + (data.qty>0?' checked':''));
+  const cost = price * (data.qty||0);
+  card.innerHTML = `
+    <div class="item-main">
+      <span class="item-name">${name}</span>
+      ${desc?`<div class="item-desc">${desc}</div>`:''}
+      ${extraNote?`<div class="item-desc">${extraNote}</div>`:''}
+    </div>
+    <div class="item-price">${fmt(price)} each</div>
+    <div class="item-controls">
+      <input type="number" class="qty" min="0" step="1" value="${data.qty}">
+      <span class="unit-label">qty</span>
+    </div>
+    <div class="item-cost">${fmt(cost)}</div>
+  `;
+  card.querySelector('.qty').addEventListener('input', (e)=>{
+    data.qty = Math.max(0, parseInt(e.target.value)||0);
+    saveState(); renderAll();
+  });
+  container.appendChild(card);
+}
+
+// Generic custom-quantity item with a unit label (gallon/bottle/each/dozen/drink)
+function renderQtyUnitItem(container, id, name, desc, price, unitLabel){
+  const data = getItem(id, {qty:0});
+  const card = el('div', 'item-card' + (data.qty>0?' checked':''));
+  const cost = price * (data.qty||0);
+  card.innerHTML = `
+    <div class="item-main">
+      <span class="item-name">${name}</span>
+      ${desc?`<div class="item-desc">${desc}</div>`:''}
+    </div>
+    <div class="item-price">${fmt(price)} / ${unitLabel}</div>
+    <div class="item-controls">
+      <input type="number" class="qty" min="0" step="1" value="${data.qty}">
+      <span class="unit-label">${unitLabel}s</span>
+    </div>
+    <div class="item-cost">${fmt(cost)}</div>
+  `;
+  card.querySelector('.qty').addEventListener('input', (e)=>{
+    data.qty = Math.max(0, parseFloat(e.target.value)||0);
+    saveState(); renderAll();
+  });
+  container.appendChild(card);
+}
+
+function headcountControl(container, sectionId, label){
+  const row = el('div', 'headcount-row');
+  const hc = getHeadcount(sectionId);
+  row.innerHTML = `
+    <label>Guests attending this section:</label>
+    <input type="number" min="0" value="${hc}">
+    <button type="button">Use total guest count (${state.guestCount})</button>
+  `;
+  row.querySelector('input').addEventListener('input', (e)=>{
+    setHeadcount(sectionId, e.target.value);
+    saveState(); renderAll();
+  });
+  row.querySelector('button').addEventListener('click', ()=>{
+    setHeadcount(sectionId, state.guestCount);
+    saveState(); renderAll();
+  });
+  container.appendChild(row);
+}
+
+/* ============================= COST CALCULATIONS ============================= */
+
+function sumDozenGroup(items, prefix){
+  let total = 0;
+  items.forEach(it=>{
+    const id = prefix + '_' + slug(it.n);
+    const d = state.items[id];
+    if(d && d.checked) total += it.p * 12 * (d.dozens||0);
+  });
+  return total;
+}
+function sumPerGuestGroup(items, prefix, headcountFn){
+  let total = 0;
+  items.forEach(it=>{
+    const id = prefix + '_' + slug(it.n);
+    const d = state.items[id];
+    if(d && d.checked) total += it.p * headcountFn();
+  });
+  return total;
+}
+function sumFlatQtyGroup(items, prefix){
+  let total = 0;
+  items.forEach(it=>{
+    const id = prefix + '_' + slug(it.n);
+    const d = state.items[id];
+    if(d && d.qty) total += it.p * d.qty;
+  });
+  return total;
+}
+function sumRadioGroup(items, groupId, headcountFn){
+  const sel = state.radios[groupId];
+  if(!sel) return 0;
+  const it = items.find(x=>x.n===sel);
+  return it ? it.p * headcountFn() : 0;
+}
+
+function calcPassedApps(){
+  return sumDozenGroup(PASSED_COLD,'pc') + sumDozenGroup(PASSED_HOT,'ph') + sumDozenGroup(PASSED_SWEET,'ps');
+}
+function calcStations(){
+  const hc = ()=>getHeadcount('stations');
+  let total = sumPerGuestGroup(STATIONS,'st',hc);
+  const oy = state.items['oyster_bar'];
+  if(oy && oy.qty) total += OYSTER_BAR.p * oy.qty;
+  return total;
+}
+function calcCarvery(){
+  let total = sumFlatQtyGroup(CARVERY,'cv');
+  const hc = ()=>getHeadcount('stations');
+  total += sumPerGuestGroup(CARVING_ENHANCEMENTS,'ce',hc);
+  return total;
+}
+function calcCeremony(){
+  let total = 0;
+  CEREMONY_REFRESH.forEach(it=>{
+    const id = 'cr_' + slug(it.n);
+    const d = state.items[id];
+    if(d && d.qty) total += it.p * d.qty;
+  });
+  return total;
+}
+function calcDesserts(){
+  const hc = ()=>getHeadcount('desserts');
+  let total = sumPerGuestGroup(DESSERT_STATIONS,'ds',hc);
+  const gt = state.radios['goodthing'];
+  if(gt){
+    const price = gt==='2'?25:gt==='3'?32:50;
+    total += price * hc();
+  }
+  return total;
+}
+function calcPlated(){
+  const hc = ()=>getHeadcount('plated');
+  let total = 0;
+  // mains: array of {item, guests}
+  (state.platedMains || []).forEach(row=>{
+    total += (row.price||0) * (row.guests||0);
+  });
+  if(state.plated_extraCourse && state.plated_extraCourse.mode==='additional') total += 22*hc();
+  if(state.plated_extraCourse && state.plated_extraCourse.mode==='alternate') total += 16*hc();
+  if(state.plated_intermezzo) total += 12*hc();
+  return total;
+}
+function calcBeverages(){
+  const hc = ()=>getHeadcount('beverages');
+  let total = 0;
+  const bar = state.barMode || 'none';
+  if(bar==='hourly'){
+    const dur = state.barHourlyDuration || 'two';
+    const tier = state.barHourlyTier || 'Premium';
+    if(dur==='single') total += HOURLY_PKG.single[tier]*hc();
+    else total += HOURLY_PKG.two[tier]*hc();
+    const addl = parseFloat(state.barAdditionalHours)||0;
+    total += addl * HOURLY_PKG.addl[tier] * hc();
+  } else if(bar==='consumption'){
+    const tier = state.barConsumptionTier || 'Premium';
+    const avg = parseFloat(state.barAvgDrinks)||0;
+    total += CONSUMPTION_HOSTED[tier] * avg * hc();
+  }
+  // bartender fee
+  total += calcBartenderFee();
+  // wine
+  Object.keys(WINES).forEach(cat=>{
+    WINES[cat].forEach(w=>{
+      const q = state.wineQty[w.n]||0;
+      total += q * w.p;
+    });
+  });
+  // specialty add-ons (per drink estimate)
+  total += sumQtyDrinkGroup(SIGNATURE_COCKTAILS,'sc');
+  total += sumQtyDrinkGroup(CHAMPAGNE_COCKTAILS,'cc');
+  total += sumQtyDrinkGroup(NO_PROOF_COCKTAILS,'np');
+  total += sumQtyDrinkGroup(SPECIALTY_TEQUILAS,'sq');
+  total += sumQtyDrinkGroup(CORDIALS,'cd');
+  // mimosa / bloody mary stations
+  const mim = state.items['mimosa_station'];
+  if(mim && mim.checked) total += 20*hc();
+  const bm = state.items['bloodymary_station'];
+  if(bm && bm.checked) total += 28*hc();
+  return total;
+}
+function sumQtyDrinkGroup(items, prefix){
+  let total = 0;
+  items.forEach(it=>{
+    const id = prefix + '_' + slug(it.n);
+    const d = state.items[id];
+    if(d && d.qty) total += it.p * d.qty;
+  });
+  return total;
+}
+function calcBartenderFee(){
+  if((state.barMode||'none')==='none') return 0;
+  const hc = getHeadcount('beverages');
+  const auto = Math.max(1, Math.ceil(hc/75));
+  const count = state.bartenderCountOverride !== undefined && state.bartenderCountOverride !== '' ? parseInt(state.bartenderCountOverride) : auto;
+  const addlHrs = parseFloat(state.bartenderAddlHours)||0;
+  return count * (300 + addlHrs*150);
+}
+function calcLateNight(){
+  const hc = ()=>getHeadcount('latenight');
+  let total = sumPerGuestGroup(LATE_NIGHT_STATIONS,'ln',hc);
+  total += sumQtyDrinkGroupDozen(LATE_NIGHT_DOZEN,'lnd');
+  return total;
+}
+function sumQtyDrinkGroupDozen(items, prefix){
+  let total=0;
+  items.forEach(it=>{
+    const id = prefix + '_' + slug(it.n);
+    const d = state.items[id];
+    if(d && d.qty) total += it.p * d.qty;
+  });
+  return total;
+}
+function calcGettingReady(){
+  let total = 0;
+  total += sumQtyDrinkGroup(GETTING_READY_BITES,'grb');
+  total += sumQtyDrinkGroupDozen(GETTING_READY_DOZEN,'grd');
+  total += sumQtyDrinkGroup(GETTING_READY_SALADS,'grs');
+  total += sumQtyDrinkGroup(GETTING_READY_SANDWICHES,'grw');
+  GETTING_READY_BEVERAGES.forEach(it=>{
+    const id = 'grv_' + slug(it.n);
+    const d = state.items[id];
+    if(d && d.qty) total += it.p * d.qty;
+  });
+  return total;
+}
+function calcBrunch(){
+  const hc = ()=>getHeadcount('brunch');
+  let total = sumRadioGroup(BRUNCH_BUFFETS,'brunch_buffet',hc);
+  total += sumPerGuestGroup(BRUNCH_LIVE,'bl',hc);
+  total += sumPerGuestGroup(BRUNCH_ENHANCEMENTS,'be',hc);
+  return total;
+}
+function calcChefAttendantFee(){
+  const hc = getHeadcount('stations');
+  const hcDessert = getHeadcount('desserts');
+  const hcBrunch = getHeadcount('brunch');
+  let fee = 0;
+  STATIONS.forEach(it=>{
+    if(it.attendant){
+      const id = 'st_' + slug(it.n);
+      const d = state.items[id];
+      if(d && d.checked) fee += 350 * Math.max(1, Math.ceil(hc/100));
+    }
+  });
+  DESSERT_STATIONS.forEach(it=>{
+    if(it.attendant){
+      const id = 'ds_' + slug(it.n);
+      const d = state.items[id];
+      if(d && d.checked) fee += 350 * Math.max(1, Math.ceil(hcDessert/100));
+    }
+  });
+  BRUNCH_LIVE.forEach(it=>{
+    if(it.attendant){
+      const id = 'bl_' + slug(it.n);
+      const d = state.items[id];
+      if(d && d.checked) fee += 350 * Math.max(1, Math.ceil(hcBrunch/100));
+    }
+  });
+  return fee;
+}
+function calcOtherCosts(){
+  return state.otherCosts.reduce((s,r)=>s + (parseFloat(r.amount)||0), 0);
+}
+function calcValetParking(){
+  const cars = parseFloat(state.valetCars)||0;
+  return cars * 25;
+}
+
+function calcCateringSubtotal(){
+  return calcPassedApps() + calcStations() + calcCarvery() + calcCeremony() + calcDesserts() +
+         calcPlated() + calcBeverages() + calcLateNight() + calcGettingReady() + calcBrunch() +
+         calcChefAttendantFee();
+}
+function calcFees(){
+  const sub = calcCateringSubtotal();
+  const serviceCharge = sub * 0.26;
+  const tax = (sub + serviceCharge) * 0.0775;
+  return {sub, serviceCharge, tax};
+}
+function calcGrandTotal(){
+  const {sub, serviceCharge, tax} = calcFees();
+  return sub + serviceCharge + tax + calcOtherCosts() + calcValetParking();
+}
+
+/* ============================= TAB DEFINITIONS ============================= */
+
+const TABS = [
+  {id:'passed', label:'Passed Apps'},
+  {id:'stations', label:'Stations & Carving'},
+  {id:'ceremony', label:'Ceremony Refreshments'},
+  {id:'desserts', label:'Dessert Stations'},
+  {id:'plated', label:'Plated Dinner'},
+  {id:'beverages', label:'Beverages & Bar'},
+  {id:'latenight', label:'Late Night'},
+  {id:'gettingready', label:'Getting Ready Room'},
+  {id:'brunch', label:'Brunch'},
+  {id:'other', label:'Other Costs'},
+  {id:'summary', label:'Summary'},
+];
+let activeTab = 'passed';
+
+function renderTabsNav(){
+  const nav = document.getElementById('tabsNav');
+  nav.innerHTML = '';
+  TABS.forEach(t=>{
+    const btn = el('button', t.id===activeTab?'active':'', t.label);
+    btn.addEventListener('click', ()=>{ activeTab = t.id; renderAll(); window.scrollTo({top:0,behavior:'smooth'}); });
+    nav.appendChild(btn);
+  });
+}
+
+/* ============================= TAB CONTENT RENDERERS ============================= */
+
+function renderPassedTab(container){
+  container.appendChild(el('div','section-intro','<b>Passed Hors d\'Oeuvres</b> — priced per piece with a <b>minimum of two dozen per selection</b>. Check an item, then set how many dozen you\'d like.'));
+
+  container.appendChild(el('h2','cat-title','Cold'));
+  const coldGrid = el('div','item-grid'); container.appendChild(coldGrid);
+  PASSED_COLD.forEach(it=> renderDozenItem(coldGrid, 'pc_'+slug(it.n), it.n, it.d, it.p, it.tags, 2));
+
+  container.appendChild(el('h2','cat-title','Hot'));
+  const hotGrid = el('div','item-grid'); container.appendChild(hotGrid);
+  PASSED_HOT.forEach(it=> renderDozenItem(hotGrid, 'ph_'+slug(it.n), it.n, it.d, it.p, it.tags, 2));
+
+  container.appendChild(el('h2','cat-title','Sweet Canapés'));
+  const sweetGrid = el('div','item-grid'); container.appendChild(sweetGrid);
+  PASSED_SWEET.forEach(it=> renderDozenItem(sweetGrid, 'ps_'+slug(it.n), it.n, it.d, it.p, it.tags, 2));
+}
+
+function renderStationsTab(container){
+  container.appendChild(el('div','section-intro','<b>Reception Stations, Carvery &amp; Ceremony</b> — station pricing is per person based on two hours of continuous service, minimum 30 guests. Carving stations are flat priced per station and serve a set number of guests. Stations marked <span class="badge-attendant" style="margin-left:0">Chef Attendant Req.</span> add a $350 attendant fee per 100 guests (calculated automatically in Summary).'));
+  headcountControl(container, 'stations', 'Stations');
+  const hc = ()=>getHeadcount('stations');
+
+  container.appendChild(el('h2','cat-title','Reception Stations on Display'));
+  const stGrid = el('div','item-grid'); container.appendChild(stGrid);
+  STATIONS.forEach(it=> renderPerGuestItem(stGrid, 'st_'+slug(it.n), it.n, it.d, it.p, hc, it.tags, it.attendant));
+
+  container.appendChild(el('h2','cat-title','Oyster Bar'));
+  container.appendChild(el('div','cat-note','Priced per dozen in 5-dozen increments (not per guest).'));
+  const oyGrid = el('div','item-grid'); container.appendChild(oyGrid);
+  renderQtyUnitItem(oyGrid, 'oyster_bar', OYSTER_BAR.n, OYSTER_BAR.d, OYSTER_BAR.p, 'dozen');
+
+  container.appendChild(el('h2','cat-title','Reception Carvery'));
+  container.appendChild(el('div','cat-note','Flat price per carving station — each serves up to the noted number of guests.'));
+  const cvGrid = el('div','item-grid'); container.appendChild(cvGrid);
+  CARVERY.forEach(it=> renderFlatQtyItem(cvGrid, 'cv_'+slug(it.n), it.n, it.d, it.p, `serves up to ${it.serves} guests`));
+
+  container.appendChild(el('h2','cat-title','Carving Enhancements'));
+  const ceGrid = el('div','item-grid'); container.appendChild(ceGrid);
+  CARVING_ENHANCEMENTS.forEach(it=> renderPerGuestItem(ceGrid, 'ce_'+slug(it.n), it.n, '', it.p, hc, []));
+}
+
+function renderCeremonyTab(container){
+  container.appendChild(el('div','section-intro','Refreshments for the ceremony — priced per gallon or per bottle. Estimate quantities based on your guest count and weather (roughly 1 gallon per 15-20 guests for a warm outdoor ceremony).'));
+  const grid = el('div','item-grid'); container.appendChild(grid);
+  CEREMONY_REFRESH.forEach(it=> renderQtyUnitItem(grid, 'cr_'+slug(it.n), it.n, '', it.p, it.unit));
+}
+
+function renderDessertsTab(container){
+  container.appendChild(el('div','section-intro','<b>Dessert Stations</b> are priced per person for two hours of service. <b>"A Little Bit of a Good Thing"</b> is a plated dessert sampler priced per guest by number of pieces.'));
+  headcountControl(container, 'desserts', 'Desserts');
+  const hc = ()=>getHeadcount('desserts');
+
+  container.appendChild(el('h2','cat-title','Dessert Stations'));
+  const grid = el('div','item-grid'); container.appendChild(grid);
+  DESSERT_STATIONS.forEach(it=> renderPerGuestItem(grid, 'ds_'+slug(it.n), it.n, it.d, it.p, hc, [], it.attendant));
+
+  container.appendChild(el('h2','cat-title','A Little Bit of a Good Thing'));
+  container.appendChild(el('div','cat-note','Choose a plated sampler size per guest. Items available: ' + GOOD_THING_ITEMS.join(', ') + '.'));
+  const gtGrid = el('div','item-grid'); container.appendChild(gtGrid);
+  renderRadioNone(gtGrid, 'goodthing', 'None');
+  renderGTRadio(gtGrid, '2', '2 Pieces', 25, hc);
+  renderGTRadio(gtGrid, '3', '3 Pieces', 32, hc);
+  renderGTRadio(gtGrid, '5', '5 Pieces', 50, hc);
+}
+function renderGTRadio(container, value, label, price, hc){
+  const selected = state.radios['goodthing'];
+  const isChecked = selected === value;
+  const card = el('div', 'item-card' + (isChecked?' checked':''));
+  const cost = isChecked ? price*hc() : 0;
+  card.innerHTML = `
+    <div class="radio-item"><input type="radio" name="goodthing" ${isChecked?'checked':''}></div>
+    <div class="item-main"><span class="item-name">${label}</span></div>
+    <div class="item-price">${fmt(price)} / guest</div>
+    <div class="item-cost">${fmt(cost)}</div>
+  `;
+  card.querySelector('input').addEventListener('change', ()=>{ state.radios['goodthing']=value; saveState(); renderAll(); });
+  container.appendChild(card);
+}
+
+function renderPlatedTab(container){
+  container.appendChild(el('div','section-intro','Dinners are a <b>three-course menu</b>: one salad or soup, a main course, and dessert — all included in the main course price below. Adding a pasta/chilled/warm starter costs <b>+$22/guest</b> as a 4th course, or <b>+$16/guest</b> if it replaces your salad/soup course. Intermezzo sorbet adds <b>+$12/guest</b>.'));
+  headcountControl(container, 'plated', 'Plated Dinner');
+  const hc = ()=>getHeadcount('plated');
+
+  container.appendChild(el('h2','cat-title','Included Salad or Soup (choose one)'));
+  container.appendChild(renderChoiceList('platedSoupSalad', SALADS.concat(SOUPS)));
+
+  container.appendChild(el('h2','cat-title','Main Course — Sea, Land &amp; Field'));
+  container.appendChild(el('div','cat-note','Add one or more mains with a guest count for each (e.g. split entrées). The app totals the guest counts and warns if they don\'t match your section headcount.'));
+  container.appendChild(renderMainsBuilder(hc));
+
+  container.appendChild(el('h2','cat-title','Included Dessert (choose one)'));
+  container.appendChild(renderChoiceList('platedDessert', PLATED_DESSERTS));
+
+  container.appendChild(el('h2','cat-title','Optional Additional Course'));
+  const extraWrap = el('div','item-grid'); container.appendChild(extraWrap);
+  const ec = state.plated_extraCourse || {mode:'', item:''};
+  state.plated_extraCourse = ec;
+  const modes = [
+    {v:'', l:'None'},
+    {v:'additional', l:'Add as 4th course (+$22/guest)'},
+    {v:'alternate', l:'Replace salad/soup course (+$16/guest)'},
+  ];
+  modes.forEach(m=>{
+    const isChecked = (ec.mode||'') === m.v;
+    const card = el('div','item-card'+(isChecked?' checked':''));
+    const cost = isChecked && m.v ? (m.v==='additional'?22:16)*hc() : 0;
+    card.innerHTML = `
+      <div class="radio-item"><input type="radio" name="extraCourseMode" ${isChecked?'checked':''}></div>
+      <div class="item-main"><span class="item-name">${m.l}</span></div>
+      <div class="item-cost">${fmt(cost)}</div>
+    `;
+    card.querySelector('input').addEventListener('change', ()=>{ ec.mode = m.v; saveState(); renderAll(); });
+    extraWrap.appendChild(card);
+  });
+  if(ec.mode){
+    const chooser = el('div','item-grid'); container.appendChild(chooser);
+    container.appendChild(el('div','cat-note','Choose which item (informational — price is fixed by the surcharge above):'));
+    chooser.appendChild(renderChoiceList('plated_extraItem', CHILLED_STARTERS.concat(WARM_STARTERS, PASTA_COURSE)));
+  }
+
+  container.appendChild(el('h2','cat-title','Intermezzo'));
+  const intWrap = el('div','item-grid'); container.appendChild(intWrap);
+  const intChecked = !!state.plated_intermezzo;
+  const intCard = el('div','item-card'+(intChecked?' checked':''));
+  intCard.innerHTML = `
+    <input type="checkbox" class="chk" ${intChecked?'checked':''}>
+    <div class="item-main"><span class="item-name">Add Intermezzo Course</span><div class="item-desc">${INTERMEZZO.join(' · ')}</div></div>
+    <div class="item-price">$12 / guest</div>
+    <div class="item-cost">${fmt(intChecked?12*hc():0)}</div>
+  `;
+  intCard.querySelector('.chk').addEventListener('change', (e)=>{ state.plated_intermezzo = e.target.checked; saveState(); renderAll(); });
+  intWrap.appendChild(intCard);
+}
+
+function renderChoiceList(radioGroupId, options){
+  const grid = el('div','item-grid');
+  const selected = state.radios[radioGroupId];
+  options.forEach(opt=>{
+    const isChecked = selected === opt;
+    const card = el('div','item-card'+(isChecked?' checked':''));
+    card.style.padding='8px 14px';
+    card.innerHTML = `
+      <div class="radio-item"><input type="radio" name="${radioGroupId}" ${isChecked?'checked':''}></div>
+      <div class="item-main"><span class="item-name" style="font-weight:500;font-size:13px;">${opt}</span></div>
+    `;
+    card.querySelector('input').addEventListener('change', ()=>{ state.radios[radioGroupId]=opt; saveState(); renderAll(); });
+    grid.appendChild(card);
+  });
+  return grid;
+}
+
+function renderMainsBuilder(hcFn){
+  const wrap = el('div','');
+  if(!state.platedMains) state.platedMains = [];
+  const table = el('div','item-grid');
+  wrap.appendChild(table);
+
+  state.platedMains.forEach((row, idx)=>{
+    const card = el('div','item-card checked');
+    const allMains = [].concat(
+      MAINS.Sea.map(m=>Object.assign({cat:'Sea'},m)),
+      MAINS.Land.map(m=>Object.assign({cat:'Land'},m)),
+      MAINS.Field.map(m=>Object.assign({cat:'Field'},m))
+    );
+    const options = allMains.map(m=>`<option value="${m.n}" ${row.item===m.n?'selected':''}>${m.cat} — ${m.n} ($${m.p})</option>`).join('');
+    card.innerHTML = `
+      <div class="item-main">
+        <select style="padding:6px;border:1px solid var(--line);border-radius:6px;font-size:13px;width:100%;max-width:340px;">
+          <option value="">Select a main…</option>${options}
+        </select>
+      </div>
+      <div class="item-controls">
+        <input type="number" min="0" class="qty" value="${row.guests||0}">
+        <span class="unit-label">guests</span>
+      </div>
+      <div class="item-cost">${fmt((row.price||0)*(row.guests||0))}</div>
+      <button class="del" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">✕</button>
+    `;
+    card.querySelector('select').addEventListener('change', (e)=>{
+      const chosen = allMains.find(m=>m.n===e.target.value);
+      row.item = chosen ? chosen.n : '';
+      row.price = chosen ? chosen.p : 0;
+      saveState(); renderAll();
+    });
+    card.querySelector('.qty').addEventListener('input', (e)=>{
+      row.guests = Math.max(0, parseInt(e.target.value)||0);
+      saveState(); renderAll();
+    });
+    card.querySelector('.del').addEventListener('click', ()=>{
+      state.platedMains.splice(idx,1); saveState(); renderAll();
+    });
+    table.appendChild(card);
+  });
+
+  const addBtn = el('button','add-row-btn','+ Add Main Course Selection');
+  addBtn.addEventListener('click', ()=>{
+    state.platedMains.push({item:'', price:0, guests:0});
+    saveState(); renderAll();
+  });
+  wrap.appendChild(addBtn);
+
+  const totalGuestsChosen = state.platedMains.reduce((s,r)=>s+(r.guests||0),0);
+  const target = hcFn();
+  if(state.platedMains.length){
+    const note = el('div','cat-note', `Guests allocated across mains: <b>${totalGuestsChosen}</b> of <b>${target}</b> section guests` + (totalGuestsChosen!==target ? ' <span style="color:var(--red);font-weight:600;">— does not match, adjust counts above</span>' : ' <span style="color:var(--green);font-weight:600;">✓ matches</span>'));
+    wrap.appendChild(note);
+  }
+  return wrap;
+}
+
+function renderBeveragesTab(container){
+  container.appendChild(el('div','section-intro','One bar with one bartender per 75 guests is standard ($300/bartender for up to 4 hrs, +$150/hr after). Standard pour: 1.5oz liquor, 2.0oz after-dinner drinks, 3.0oz port. Choose either an all-inclusive <b>Hourly Package</b> or a <b>Consumption-based Hosted Bar</b> — dinner wine is always priced separately by the bottle.'));
+  headcountControl(container, 'beverages', 'Bar / Beverages');
+  const hc = ()=>getHeadcount('beverages');
+
+  container.appendChild(el('h2','cat-title','Bar Service'));
+  const modeGrid = el('div','item-grid'); container.appendChild(modeGrid);
+  [['none','No hosted bar'],['hourly','Hourly Open Bar Package'],['consumption','Consumption-based Hosted Bar']].forEach(([v,l])=>{
+    const isChecked = (state.barMode||'none')===v;
+    const card = el('div','item-card'+(isChecked?' checked':''));
+    card.innerHTML = `<div class="radio-item"><input type="radio" name="barMode" ${isChecked?'checked':''}></div><div class="item-main"><span class="item-name">${l}</span></div>`;
+    card.querySelector('input').addEventListener('change', ()=>{ state.barMode=v; saveState(); renderAll(); });
+    modeGrid.appendChild(card);
+  });
+
+  if(state.barMode==='hourly'){
+    const fc = el('div','fees-card'); container.appendChild(fc);
+    fc.innerHTML = `<h3>Hourly Package Options</h3>`;
+    const row1 = el('div','fees-row');
+    row1.innerHTML = `<div class="label">Duration</div>`;
+    const durSel = el('select'); durSel.innerHTML = `<option value="single" ${state.barHourlyDuration==='single'?'selected':''}>Single Hour</option><option value="two" ${(!state.barHourlyDuration||state.barHourlyDuration==='two')?'selected':''}>Two Hours</option>`;
+    durSel.style.cssText='padding:6px;border:1px solid var(--line);border-radius:6px;';
+    durSel.addEventListener('change', e=>{ state.barHourlyDuration=e.target.value; saveState(); renderAll(); });
+    row1.appendChild(durSel); fc.appendChild(row1);
+
+    const row2 = el('div','fees-row');
+    row2.innerHTML = `<div class="label">Tier</div>`;
+    const tierSel = el('select'); tierSel.innerHTML = ['Premium','Luxury','Grand'].map(t=>`<option value="${t}" ${(state.barHourlyTier||'Premium')===t?'selected':''}>${t}</option>`).join('');
+    tierSel.style.cssText='padding:6px;border:1px solid var(--line);border-radius:6px;';
+    tierSel.addEventListener('change', e=>{ state.barHourlyTier=e.target.value; saveState(); renderAll(); });
+    row2.appendChild(tierSel); fc.appendChild(row2);
+
+    const row3 = el('div','fees-row');
+    row3.innerHTML = `<div class="label">Additional hours beyond package</div>`;
+    const addlInp = el('input'); addlInp.type='number'; addlInp.min=0; addlInp.value = state.barAdditionalHours||0;
+    addlInp.addEventListener('input', e=>{ state.barAdditionalHours=e.target.value; saveState(); renderAll(); });
+    row3.appendChild(addlInp); fc.appendChild(row3);
+
+    const dur = state.barHourlyDuration||'two';
+    const tier = state.barHourlyTier||'Premium';
+    const base = (dur==='single'?HOURLY_PKG.single[tier]:HOURLY_PKG.two[tier]) * hc();
+    const addl = (parseFloat(state.barAdditionalHours)||0) * HOURLY_PKG.addl[tier] * hc();
+    const totalRow = el('div','fees-row');
+    totalRow.innerHTML = `<div class="label">Package Subtotal</div><div class="val">${fmt(base+addl)}</div>`;
+    fc.appendChild(totalRow);
+  }
+
+  if(state.barMode==='consumption'){
+    const fc = el('div','fees-card'); container.appendChild(fc);
+    fc.innerHTML = `<h3>Consumption-based Hosted Bar (estimate)</h3>`;
+    const row2 = el('div','fees-row');
+    row2.innerHTML = `<div class="label">Tier</div>`;
+    const tierSel = el('select'); tierSel.innerHTML = ['Premium','Luxury','Grand'].map(t=>`<option value="${t}" ${(state.barConsumptionTier||'Premium')===t?'selected':''}>${t} ($${CONSUMPTION_HOSTED[t]}/drink)</option>`).join('');
+    tierSel.style.cssText='padding:6px;border:1px solid var(--line);border-radius:6px;';
+    tierSel.addEventListener('change', e=>{ state.barConsumptionTier=e.target.value; saveState(); renderAll(); });
+    row2.appendChild(tierSel); fc.appendChild(row2);
+
+    const row3 = el('div','fees-row');
+    row3.innerHTML = `<div class="label">Estimated average drinks per guest</div>`;
+    const inp = el('input'); inp.type='number'; inp.min=0; inp.step=0.5; inp.value=state.barAvgDrinks||3;
+    inp.addEventListener('input', e=>{ state.barAvgDrinks=e.target.value; saveState(); renderAll(); });
+    row3.appendChild(inp); fc.appendChild(row3);
+
+    const tier = state.barConsumptionTier||'Premium';
+    const avg = parseFloat(state.barAvgDrinks)||0;
+    const totalRow = el('div','fees-row');
+    totalRow.innerHTML = `<div class="label">Bar Subtotal</div><div class="val">${fmt(CONSUMPTION_HOSTED[tier]*avg*hc())}</div>`;
+    fc.appendChild(totalRow);
+  }
+
+  if((state.barMode||'none')!=='none'){
+    const fc = el('div','fees-card'); container.appendChild(fc);
+    fc.innerHTML = `<h3>Bartender Fee</h3>`;
+    const auto = Math.max(1, Math.ceil(hc()/75));
+    const row = el('div','fees-row');
+    row.innerHTML = `<div class="label">Bartenders <small>Auto: ${auto} (1 per 75 guests)</small></div>`;
+    const inp = el('input'); inp.type='number'; inp.min=0; inp.placeholder=auto; inp.value = state.bartenderCountOverride||'';
+    inp.addEventListener('input', e=>{ state.bartenderCountOverride=e.target.value; saveState(); renderAll(); });
+    row.appendChild(inp); fc.appendChild(row);
+
+    const row2 = el('div','fees-row');
+    row2.innerHTML = `<div class="label">Additional hours beyond 4hr base (+$150/hr/bartender)</div>`;
+    const inp2 = el('input'); inp2.type='number'; inp2.min=0; inp2.value = state.bartenderAddlHours||0;
+    inp2.addEventListener('input', e=>{ state.bartenderAddlHours=e.target.value; saveState(); renderAll(); });
+    row2.appendChild(inp2); fc.appendChild(row2);
+
+    const totalRow = el('div','fees-row');
+    totalRow.innerHTML = `<div class="label">Bartender Fee Total</div><div class="val">${fmt(calcBartenderFee())}</div>`;
+    fc.appendChild(totalRow);
+  }
+
+  container.appendChild(el('h2','cat-title','Dinner Wine (priced per bottle, always separate)'));
+  Object.keys(WINES).forEach(cat=>{
+    const details = el('details','wine-group');
+    details.appendChild(el('summary','', cat));
+    const grid = el('div','item-grid'); details.appendChild(grid);
+    WINES[cat].forEach(w=>{
+      const qty = state.wineQty[w.n]||0;
+      const card = el('div','item-card'+(qty>0?' checked':''));
+      card.innerHTML = `
+        <div class="item-main"><span class="item-name" style="font-size:13px;">${w.n}</span></div>
+        <div class="item-price">${fmt(w.p)} / bottle</div>
+        <div class="item-controls"><input type="number" min="0" class="qty" value="${qty}"><span class="unit-label">bottles</span></div>
+        <div class="item-cost">${fmt(qty*w.p)}</div>
+      `;
+      card.querySelector('.qty').addEventListener('input', e=>{
+        state.wineQty[w.n] = Math.max(0, parseInt(e.target.value)||0);
+        saveState(); renderAll();
+      });
+      grid.appendChild(card);
+    });
+    container.appendChild(details);
+  });
+
+  container.appendChild(el('h2','cat-title','Signature Cocktails'));
+  const scGrid = el('div','item-grid'); container.appendChild(scGrid);
+  SIGNATURE_COCKTAILS.forEach(it=> renderQtyUnitItem(scGrid, 'sc_'+slug(it.n), it.n, it.d, it.p, 'drink'));
+
+  container.appendChild(el('h2','cat-title','Champagne Cocktails'));
+  const ccGrid = el('div','item-grid'); container.appendChild(ccGrid);
+  CHAMPAGNE_COCKTAILS.forEach(it=> renderQtyUnitItem(ccGrid, 'cc_'+slug(it.n), it.n, it.d, it.p, 'drink'));
+
+  container.appendChild(el('h2','cat-title','No Proof Cocktails'));
+  const npGrid = el('div','item-grid'); container.appendChild(npGrid);
+  NO_PROOF_COCKTAILS.forEach(it=> renderQtyUnitItem(npGrid, 'np_'+slug(it.n), it.n, '', it.p, 'drink'));
+
+  container.appendChild(el('h2','cat-title','Specialty Tequilas'));
+  const sqGrid = el('div','item-grid'); container.appendChild(sqGrid);
+  SPECIALTY_TEQUILAS.forEach(it=> renderQtyUnitItem(sqGrid, 'sq_'+slug(it.n), it.n, '', it.p, 'drink'));
+
+  container.appendChild(el('h2','cat-title','Cordials &amp; After-Dinner'));
+  const cdGrid = el('div','item-grid'); container.appendChild(cdGrid);
+  CORDIALS.forEach(it=> renderQtyUnitItem(cdGrid, 'cd_'+slug(it.n), it.n, '', it.p, 'drink'));
+
+  container.appendChild(el('h2','cat-title','Mimosa &amp; Bloody Mary Stations'));
+  container.appendChild(el('div','cat-note','Priced per guest, plus alcohol on consumption. Minimum 25 guests.'));
+  const msGrid = el('div','item-grid'); container.appendChild(msGrid);
+  renderPerGuestItem(msGrid, 'mimosa_station', 'Mimosa Station', 'Sparkling wine, seasonal fruit puree, fruit juices', 20, hc, []);
+  renderPerGuestItem(msGrid, 'bloodymary_station', 'Bloody Mary Station', 'Tito\'s Vodka, house bloody mary mix, garnishes', 28, hc, []);
+}
+
+function renderLateNightTab(container){
+  container.appendChild(el('div','section-intro','Priced per person for two hours of continuous service, minimum 30 guests.'));
+  headcountControl(container, 'latenight', 'Late Night');
+  const hc = ()=>getHeadcount('latenight');
+
+  container.appendChild(el('h2','cat-title','Stations'));
+  const grid = el('div','item-grid'); container.appendChild(grid);
+  LATE_NIGHT_STATIONS.forEach(it=> renderPerGuestItem(grid, 'ln_'+slug(it.n), it.n, it.d, it.p, hc, []));
+
+  container.appendChild(el('h2','cat-title','By the Dozen'));
+  const dozGrid = el('div','item-grid'); container.appendChild(dozGrid);
+  LATE_NIGHT_DOZEN.forEach(it=> renderQtyUnitItem(dozGrid, 'lnd_'+slug(it.n), it.n, '', it.p, 'dozen'));
+}
+
+function renderGettingReadyTab(container){
+  container.appendChild(el('div','section-intro','A la carte items for the getting-ready suite — enter quantities directly (not tied to your full guest count, since usually just the wedding party).'));
+
+  container.appendChild(el('h2','cat-title','Small Bites'));
+  const bGrid = el('div','item-grid'); container.appendChild(bGrid);
+  GETTING_READY_BITES.forEach(it=> renderQtyUnitItem(bGrid, 'grb_'+slug(it.n), it.n, '', it.p, 'order'));
+
+  container.appendChild(el('h2','cat-title','By the Dozen'));
+  const dGrid = el('div','item-grid'); container.appendChild(dGrid);
+  GETTING_READY_DOZEN.forEach(it=> renderQtyUnitItem(dGrid, 'grd_'+slug(it.n), it.n, '', it.p, 'dozen'));
+
+  container.appendChild(el('h2','cat-title','Salads'));
+  const sGrid = el('div','item-grid'); container.appendChild(sGrid);
+  GETTING_READY_SALADS.forEach(it=> renderQtyUnitItem(sGrid, 'grs_'+slug(it.n), it.n, '', it.p, 'order'));
+
+  container.appendChild(el('h2','cat-title','Sandwiches'));
+  const wGrid = el('div','item-grid'); container.appendChild(wGrid);
+  GETTING_READY_SANDWICHES.forEach(it=> renderQtyUnitItem(wGrid, 'grw_'+slug(it.n), it.n, '', it.p, 'order'));
+
+  container.appendChild(el('h2','cat-title','Non-Alcoholic Beverages'));
+  const vGrid = el('div','item-grid'); container.appendChild(vGrid);
+  GETTING_READY_BEVERAGES.forEach(it=> renderQtyUnitItem(vGrid, 'grv_'+slug(it.n), it.n, '', it.p, it.unit));
+}
+
+function renderBrunchTab(container){
+  container.appendChild(el('div','section-intro','Buffet pricing is per person and includes coffee, decaf and assorted teas. Live stations are chef-attended add-ons (minimum 30 guests, $350 per chef attendant).'));
+  headcountControl(container, 'brunch', 'Brunch');
+  const hc = ()=>getHeadcount('brunch');
+
+  container.appendChild(el('h2','cat-title','Buffet (choose one)'));
+  const buffetGrid = el('div','item-grid'); container.appendChild(buffetGrid);
+  renderRadioNone(buffetGrid, 'brunch_buffet', 'None selected');
+  BRUNCH_BUFFETS.forEach(it=> renderRadioItem(buffetGrid, 'brunch_buffet', it.n, it.n, it.d, it.p, hc, []));
+
+  container.appendChild(el('h2','cat-title','Live Stations'));
+  const liveGrid = el('div','item-grid'); container.appendChild(liveGrid);
+  BRUNCH_LIVE.forEach(it=> renderPerGuestItem(liveGrid, 'bl_'+slug(it.n), it.n, it.d, it.p, hc, [], it.attendant));
+
+  container.appendChild(el('h2','cat-title','Breakfast Enhancements'));
+  const enGrid = el('div','item-grid'); container.appendChild(enGrid);
+  BRUNCH_ENHANCEMENTS.forEach(it=> renderPerGuestItem(enGrid, 'be_'+slug(it.n), it.n, '', it.p, hc, []));
+}
+
+function renderOtherTab(container){
+  container.appendChild(el('div','section-intro','Track other wedding costs here (venue rental, photography, florals, attire, etc.) so this planner reflects your <b>full wedding budget</b>, not just catering. These are added to the grand total as-is — no service charge or tax is applied.'));
+
+  const listWrap = el('div',''); container.appendChild(listWrap);
+  state.otherCosts.forEach((row)=>{
+    const r = el('div','other-row');
+    r.innerHTML = `
+      <input type="text" placeholder="Description (e.g. Photographer)" value="${(row.desc||'').replace(/"/g,'&quot;')}">
+      <input type="number" placeholder="Amount" min="0" value="${row.amount||''}">
+      <button class="del" title="Remove">✕</button>
+    `;
+    r.querySelector('input[type=text]').addEventListener('input', e=>{ row.desc = e.target.value; saveState(); });
+    r.querySelector('input[type=number]').addEventListener('input', e=>{ row.amount = e.target.value; saveState(); renderAll(); });
+    r.querySelector('.del').addEventListener('click', ()=>{
+      state.otherCosts = state.otherCosts.filter(x=>x.id!==row.id);
+      saveState(); renderAll();
+    });
+    listWrap.appendChild(r);
+  });
+
+  const addBtn = el('button','add-row-btn','+ Add Line Item');
+  addBtn.addEventListener('click', ()=>{
+    state.otherCosts.push({id: state.nextOtherId++, desc:'', amount:''});
+    saveState(); renderAll();
+  });
+  container.appendChild(addBtn);
+
+  container.appendChild(el('h2','cat-title','Valet Parking'));
+  container.appendChild(el('div','cat-note','$25 per car — optional, if hosting guest parking.'));
+  const vGrid = el('div','item-grid'); container.appendChild(vGrid);
+  const vCard = el('div','item-card');
+  vCard.innerHTML = `
+    <div class="item-main"><span class="item-name">Estimated Cars</span></div>
+    <div class="item-price">$25 / car</div>
+    <div class="item-controls"><input type="number" min="0" class="qty" value="${state.valetCars||0}"><span class="unit-label">cars</span></div>
+    <div class="item-cost">${fmt(calcValetParking())}</div>
+  `;
+  vCard.querySelector('.qty').addEventListener('input', e=>{ state.valetCars = e.target.value; saveState(); renderAll(); });
+  vGrid.appendChild(vCard);
+}
+
+function renderSummaryTab(container){
+  const stationsCarveryTotal = calcStations() + calcCarvery();
+  const passed = calcPassedApps();
+  const ceremony = calcCeremony();
+  const desserts = calcDesserts();
+  const plated = calcPlated();
+  const beverages = calcBeverages();
+  const lateNight = calcLateNight();
+  const gettingReady = calcGettingReady();
+  const brunch = calcBrunch();
+  const chefFee = calcChefAttendantFee();
+  const sub = passed + stationsCarveryTotal + ceremony + desserts + plated + beverages + lateNight + gettingReady + brunch + chefFee;
+  const serviceCharge = sub * 0.26;
+  const tax = (sub + serviceCharge) * 0.0775;
+  const otherCosts = calcOtherCosts();
+  const valet = calcValetParking();
+  const grand = sub + serviceCharge + tax + otherCosts + valet;
+
+  const table = el('table','summary-table');
+  const body = [
+    ['Passed Hors d\'Oeuvres', passed],
+    ['Reception Stations, Oyster Bar &amp; Carvery', stationsCarveryTotal],
+    ['Ceremony Refreshments', ceremony],
+    ['Dessert Stations', desserts],
+    ['Plated Dinner', plated],
+    ['Beverages &amp; Bar (incl. bartender fee &amp; wine)', beverages],
+    ['Late Night', lateNight],
+    ['Getting Ready Room', gettingReady],
+    ['Brunch', brunch],
+    ['Chef Attendant Fees', chefFee],
+  ].filter(r=>true);
+
+  let bodyHtml = body.map(([label,val])=>`<tr><td>${label}</td><td class="num">${fmt(val)}</td></tr>`).join('');
+  table.innerHTML = `
+    <thead><tr><th>Category</th><th class="num">Amount</th></tr></thead>
+    <tbody>
+      ${bodyHtml}
+      <tr class="subtotal"><td>Food &amp; Beverage Subtotal</td><td class="num">${fmt(sub)}</td></tr>
+      <tr><td>Service Charge (26%, taxable)</td><td class="num">${fmt(serviceCharge)}</td></tr>
+      <tr><td>CA Sales Tax (7.75% on subtotal + service charge)</td><td class="num">${fmt(tax)}</td></tr>
+      <tr><td>Other Wedding Costs</td><td class="num">${fmt(otherCosts)}</td></tr>
+      <tr><td>Valet Parking</td><td class="num">${fmt(valet)}</td></tr>
+      <tr class="grandtotal"><td>Grand Total</td><td class="num">${fmt(grand)}</td></tr>
+    </tbody>
+  `;
+  container.appendChild(table);
+
+  const perGuest = state.guestCount>0 ? grand/state.guestCount : 0;
+  container.appendChild(el('div','cat-note', `≈ ${fmt(perGuest)} per guest based on ${state.guestCount} guests (using the food &amp; beverage + fees total; other costs and valet included in grand total above).`));
+
+  if(state.budgetTarget>0){
+    const diff = state.budgetTarget - grand;
+    const msg = diff>=0
+      ? `You are <b style="color:var(--green)">${fmt(diff)} under</b> your ${fmt(state.budgetTarget)} budget target.`
+      : `You are <b style="color:var(--red)">${fmt(Math.abs(diff))} over</b> your ${fmt(state.budgetTarget)} budget target.`;
+    container.appendChild(el('div','section-intro', msg));
+  }
+
+  container.appendChild(el('h2','cat-title','Notes &amp; Reminders'));
+  container.appendChild(el('div','cat-note',
+    'Guarantee: final guest count due by 12:00pm three business days prior (cannot be reduced after, +3% buffer allowed). ' +
+    'Buffet minimums apply (typically 30 guests) or a supplemental charge is added. ' +
+    'Alcohol may only be served by Fairmont Grand Del Mar staff; last call 1:30am, service ends 2:00am. ' +
+    'All amplified outdoor music must end by 10:00pm. Prices are subject to change by the venue without notice — reconfirm before signing your final BEO.'
+  ));
+}
+
+/* ============================= MASTER RENDER ============================= */
+
+function renderAll(){
+  renderTabsNav();
+  const main = document.getElementById('mainContent');
+  main.innerHTML = '';
+
+  const panel = el('section','tab-panel active');
+  main.appendChild(panel);
+
+  switch(activeTab){
+    case 'passed': renderPassedTab(panel); break;
+    case 'stations': renderStationsTab(panel); break;
+    case 'ceremony': renderCeremonyTab(panel); break;
+    case 'desserts': renderDessertsTab(panel); break;
+    case 'plated': renderPlatedTab(panel); break;
+    case 'beverages': renderBeveragesTab(panel); break;
+    case 'latenight': renderLateNightTab(panel); break;
+    case 'gettingready': renderGettingReadyTab(panel); break;
+    case 'brunch': renderBrunchTab(panel); break;
+    case 'other': renderOtherTab(panel); break;
+    case 'summary': renderSummaryTab(panel); break;
+  }
+
+  updateTopBar();
+}
+
+function updateTopBar(){
+  document.getElementById('guestCount').value = state.guestCount;
+  document.getElementById('budgetTarget').value = state.budgetTarget || '';
+  const grand = calcGrandTotal();
+  document.getElementById('grandTotalDisplay').textContent = fmt(grand);
+  const perGuest = state.guestCount>0 ? grand/state.guestCount : 0;
+  document.getElementById('perGuestDisplay').textContent = state.guestCount>0 ? `≈ ${fmt(perGuest)} / guest incl. fees` : 'Estimated total incl. service & tax';
+
+  const bar = document.getElementById('progressBar');
+  const msg = document.getElementById('budgetMsg');
+  if(state.budgetTarget>0){
+    const pct = Math.min(100, (grand/state.budgetTarget)*100);
+    bar.style.width = pct + '%';
+    bar.classList.toggle('over', grand > state.budgetTarget);
+    if(grand > state.budgetTarget){
+      msg.textContent = `${fmt(grand-state.budgetTarget)} over budget`;
+      msg.className = 'budget-msg over';
+    } else {
+      msg.textContent = `${fmt(state.budgetTarget-grand)} remaining`;
+      msg.className = 'budget-msg under';
+    }
+  } else {
+    bar.style.width='0%';
+    bar.classList.remove('over');
+    msg.textContent = '';
+  }
+}
+
+/* ============================= INIT ============================= */
+
+document.getElementById('guestCount').addEventListener('input', (e)=>{
+  state.guestCount = Math.max(0, parseInt(e.target.value)||0);
+  saveState(); renderAll();
+});
+document.getElementById('budgetTarget').addEventListener('input', (e)=>{
+  state.budgetTarget = Math.max(0, parseFloat(e.target.value)||0);
+  saveState(); updateTopBar();
+});
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(confirm('This will clear all your selections and start fresh. Continue?')){
+    localStorage.removeItem(LS_KEY);
+    state = {guestCount:150, budgetTarget:0, headcounts:{}, items:{}, radios:{}, otherCosts:[], wineQty:{}, nextOtherId:1};
+    renderAll();
+  }
+});
+
+loadState();
+renderAll();
+</script>
+</body>
+</html>
