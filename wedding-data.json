@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "settings": {
+    "guestCount": 150,
+    "budgetTarget": 0,
+    "weddingDate": null,
+    "venue": "Fairmont Grand Del Mar"
+  },
+  "categories": [
+    {
+      "id": "cat_venue",
+      "name": "Venue",
+      "sortOrder": 0,
+      "budgetTarget": 0
+    },
+    {
+      "id": "cat_catering",
+      "name": "Catering & Bar",
+      "sortOrder": 1,
+      "budgetTarget": 0
+    },
+    {
+      "id": "cat_photo",
+      "name": "Photography & Video",
+      "sortOrder": 2,
+      "budgetTarget": 0
+    },
+    {
+      "id": "cat_florals",
+      "name": "Florals & Decor",
+      "sortOrder": 3,
+      "budgetTarget": 0
+    },
+    {
+      "id": "cat_music",
+      "name": "Music & Entertainment",
+      "sortOrder": 4,
+      "budgetTarget": 0
+    },
+    {
+      "id": "cat_attire",
+      "name": "Attire & Beauty",
+      "sortOrder": 5,
+      "budgetTarget": 0
+    },
+    {
+      "id": "cat_stationery",
+      "name": "Stationery",
+      "sortOrder": 6,
+      "budgetTarget": 0
+    },
+    {
+      "id": "cat_rentals",
+      "name": "Rentals",
+      "sortOrder": 7,
+      "budgetTarget": 0
+    },
+    {
+      "id": "cat_cake",
+      "name": "Cake & Desserts",
+      "sortOrder": 8,
+      "budgetTarget": 0
+    },
+    {
+      "id": "cat_transport",
+      "name": "Transportation",
+      "sortOrder": 9,
+      "budgetTarget": 0
+    },
+    {
+      "id": "cat_officiant",
+      "name": "Officiant",
+      "sortOrder": 10,
+      "budgetTarget": 0
+    },
+    {
+      "id": "cat_gifts",
+      "name": "Gifts & Favors",
+      "sortOrder": 11,
+      "budgetTarget": 0
+    }
+  ],
+  "budgetItems": [],
+  "vendorOptions": [],
+  "palettes": [
+    {
+      "id": "pal_ms0xarqbagd80",
+      "name": "countryside picnic",
+      "colors": [
+        "#627fbe",
+        "#e7630b",
+        "#63772c",
+        "#b96588",
+        "#e2bf94"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "pal_ms0xjblr0vx79",
+      "name": "monet",
+      "colors": [
+        "#e9a18d",
+        "#a2b7c3",
+        "#a6a862",
+        "#e8ded3"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "pal_ms0xl9s5bepp0",
+      "name": "modern oriental",
+      "colors": [
+        "#860409",
+        "#fca245",
+        "#c12f0e",
+        "#310d0c",
+        "#31539b"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "pal_ms0xr1avuiz3p",
+      "name": "muted summer",
+      "colors": [
+        "#f2cc36",
+        "#9e93b1",
+        "#b6c1d5",
+        "#c59cac",
+        "#8d9141"
+      ],
+      "notes": ""
+    }
+  ],
+  "collections": []
+}
