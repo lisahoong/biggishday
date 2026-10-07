@@ -1,7 +1,7 @@
-import * as api from './api.js';
-import { state, listFor, allTags } from './state.js';
-import { Markup } from './markup.js';
-import { h, icon, toast, errorMessage, timeAgo, formatDate, normalizeTag, isTyping } from './ui.js';
+import * as api from './api.js?v=2';
+import { state, listFor, allTags } from './state.js?v=2';
+import { Markup } from './markup.js?v=2';
+import { h, icon, toast, errorMessage, timeAgo, formatDate, normalizeTag, isTyping } from './ui.js?v=2';
 
 let view = null;
 

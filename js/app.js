@@ -1,7 +1,7 @@
-import * as api from './api.js';
-import { state } from './state.js';
-import { renderGallery } from './gallery.js';
-import { h, errorMessage } from './ui.js';
+import * as api from './api.js?v=2';
+import { state } from './state.js?v=2';
+import { renderGallery } from './gallery.js?v=2';
+import { h, errorMessage } from './ui.js?v=2';
 
 const NAME_KEY = 'board.name';
 const root = document.getElementById('app');

@@ -1,5 +1,5 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm';
-import { SUPABASE_URL, SUPABASE_ANON_KEY, BOARD_EMAIL } from './config.js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, BOARD_EMAIL } from './config.js?v=2';
 
 export const configured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 const sb = configured ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;

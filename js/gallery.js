@@ -1,7 +1,7 @@
-import * as api from './api.js';
-import { state, listFor, allTags } from './state.js';
-import { openDetail } from './detail.js';
-import { h, icon, toast, errorMessage } from './ui.js';
+import * as api from './api.js?v=2';
+import { state, listFor, allTags } from './state.js?v=2';
+import { openDetail } from './detail.js?v=2';
+import { h, icon, toast, errorMessage } from './ui.js?v=2';
 
 const MAX_EDGE = 2400;
 
@@ -9,7 +9,7 @@ let filtersEl, gridEl, countEl;
 
 export function renderGallery(root, { onSignOut, onChangeName }) {
   const search = h('input', {
-    type: 'search', class: 'search', placeholder: 'Search tags and comments', 'aria-label': 'Search tags and comments',
+    type: 'search', class: 'search', placeholder: 'Search', 'aria-label': 'Search tags and comments',
     value: state.search,
   });
   search.addEventListener('input', () => { state.search = search.value; refreshGallery(); });
