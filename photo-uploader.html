@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Photo Catalog</title>
+<style>
+  :root {
+    --pink: #c98a9c;
+    --pink-dark: #a56377;
+    --cream: #faf6f2;
+    --ink: #3a2e2e;
+    --line: #e7dcd6;
+    --good: #4c7a4c;
+    --bad: #b03a3a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    padding: 32px 16px 80px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  h1 { font-size: 26px; font-weight: 600; margin: 0 0 4px; }
+  .sub { color: #7a6a6a; margin: 0 0 24px; font-size: 14px; }
+  .panel {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 20px;
+  }
+  .folder-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 0 2px 12px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .folder-status { flex: 1; min-width: 200px; font-size: 12px; color: #9a8a8a; }
+  .folder-status .path { font-weight: 600; color: #7a6a6a; }
+  .folder-status .state {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 7px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .state.ok { background: #e6f0e6; color: var(--good); }
+  .state.no { background: #f5e6e6; color: var(--bad); }
+  button {
+    font: inherit;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: opacity 0.15s;
+  }
+  button:hover { opacity: 0.88; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: var(--pink); color: #fff; }
+  .btn-secondary { background: #f1e9e5; color: var(--ink); }
+  .btn-small { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+
+  .filter-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .filter-tag {
+    background: #f1e9e5;
+    color: var(--ink);
+    border-radius: 100px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .filter-tag .count { opacity: 0.6; font-weight: 400; margin-left: 3px; }
+  .filter-tag.active { background: var(--pink); color: #fff; }
+  .filter-empty { color: #b3a3a3; font-size: 13px; }
+  .filter-section + .filter-section { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .filter-section summary {
+    list-style: none;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    color: #9a8a8a;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    user-select: none;
+  }
+  .filter-section summary::-webkit-details-marker { display: none; }
+  .filter-section summary::before {
+    content: '▸';
+    font-size: 9px;
+    display: inline-block;
+    transition: transform 0.15s;
+  }
+  .filter-section[open] summary::before { transform: rotate(90deg); }
+  .filter-section summary:hover { color: var(--pink-dark); }
+  .filter-tag-suggested {
+    background: transparent;
+    color: #9a8a8a;
+    border: 1px dashed var(--line);
+    border-radius: 100px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .filter-tag-suggested .count { opacity: 0.6; font-weight: 400; margin-left: 3px; }
+  .filter-tag-suggested.active { background: var(--pink); color: #fff; border-color: var(--pink); }
+  .clear-filters {
+    font-size: 12px;
+    color: var(--pink-dark);
+    background: none;
+    border: none;
+    padding: 4px 6px;
+    font-weight: 600;
+    text-decoration: underline;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 16px;
+  }
+  .empty-hint { text-align: center; color: #b3a3a3; font-size: 13px; padding: 40px 0; grid-column: 1 / -1; }
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+  }
+  .thumb-wrap { position: relative; width: 100%; aspect-ratio: 1 / 1; background: #eee; overflow: hidden; border-radius: 9px 9px 0 0; }
+  .delete-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(58, 46, 46, 0.55);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    padding: 0;
+    border: none;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s;
+  }
+  .card:hover .delete-btn { opacity: 1; }
+  .delete-btn:hover { background: var(--bad); opacity: 1; }
+  .thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb-placeholder {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: #b3a3a3;
+  }
+  .card-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .card-name {
+    font-size: 12px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pills { display: flex; flex-wrap: wrap; gap: 5px; }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #fdf3f6;
+    color: var(--pink-dark);
+    border: 1px solid #f0d9e0;
+    border-radius: 100px;
+    padding: 3px 4px 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .pill .x {
+    cursor: pointer;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--pink-dark);
+    background: rgba(197, 138, 156, 0.18);
+    font-size: 10px;
+    line-height: 1;
+  }
+  .pill .x:hover { background: rgba(197, 138, 156, 0.35); }
+  .add-tag-wrap { position: relative; }
+  .add-tag-input {
+    width: 100%;
+    padding: 5px 8px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-size: 11px;
+    font-family: inherit;
+  }
+  .add-tag-input:focus { outline: none; border-color: var(--pink); }
+  .tag-suggest {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 20;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 6px 16px rgba(58, 46, 46, 0.12);
+    max-height: 160px;
+    overflow-y: auto;
+    padding: 4px;
+  }
+  .tag-suggest-item {
+    padding: 6px 8px;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .tag-suggest-item:hover,
+  .tag-suggest-item.active {
+    background: #fdf3f6;
+    color: var(--pink-dark);
+  }
+
+  .log {
+    font-size: 12px;
+    color: #9a8a8a;
+    max-height: 90px;
+    overflow-y: auto;
+    margin-top: 10px;
+    line-height: 1.6;
+  }
+  .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .count-label { font-size: 13px; color: #7a6a6a; }
+  .toggle-group { display: flex; align-items: center; gap: 16px; margin-left: auto; }
+  .tags-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+    user-select: none;
+  }
+  .tags-toggle input { display: none; }
+  .tags-toggle .switch {
+    position: relative;
+    width: 34px;
+    height: 20px;
+    background: #e7dcd6;
+    border-radius: 100px;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .tags-toggle .switch::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(58, 46, 46, 0.2);
+    transition: transform 0.15s;
+  }
+  .tags-toggle input:checked + .switch { background: var(--pink); }
+  .tags-toggle input:checked + .switch::before { transform: translateX(14px); }
+  body.hide-tags .my-tags-details { display: none; }
+  body.hide-suggested .suggested-details { display: none; }
+  .suggested-details { margin-top: 4px; }
+
+  .pills-suggested { display: flex; flex-wrap: wrap; gap: 5px; }
+  .pill-suggested {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: transparent;
+    color: #9a8a8a;
+    border: 1px dashed var(--line);
+    border-radius: 100px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .pill-suggested:hover { border-color: var(--pink); color: var(--pink-dark); }
+  .pill-suggested .plus { font-size: 12px; line-height: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Wedding Photo Catalog</h1>
+  <p class="sub">Browse the photos in your <code>photos</code> folder, tag them, and filter by tag.</p>
+
+  <div class="folder-bar">
+    <div class="folder-status">
+      Photos folder: <span class="path" id="folderPath">not connected</span>
+      <span class="state no" id="folderState">not connected</span>
+    </div>
+    <button class="btn-secondary btn-small" id="chooseFolderBtn">Choose Photos Folder&hellip;</button>
+    <button class="btn-secondary btn-small" id="reloadBtn" style="display:none;">Reload</button>
+  </div>
+
+  <div class="panel" id="filterPanel" style="display:none;">
+    <details class="filter-section" id="myTagsFilterSection" open>
+      <summary>My tags</summary>
+      <div class="filter-bar" id="filterBar"></div>
+    </details>
+    <details class="filter-section" id="suggestedFilterSection">
+      <summary>Suggested tags</summary>
+      <div class="filter-bar" id="filterBarSuggested"></div>
+    </details>
+  </div>
+
+  <div class="toolbar">
+    <span class="count-label" id="countLabel"></span>
+    <div class="toggle-group">
+      <label class="tags-toggle">
+        <input type="checkbox" id="showTagsToggle" checked>
+        <span class="switch"></span>
+        Show my tags
+      </label>
+      <label class="tags-toggle">
+        <input type="checkbox" id="showSuggestedToggle" checked>
+        <span class="switch"></span>
+        Show suggested tags
+      </label>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="grid" id="grid">
+      <div class="empty-hint" id="emptyHint">Choose your photos folder to load the catalog.</div>
+    </div>
+    <div class="log" id="log"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const chooseFolderBtn = document.getElementById('chooseFolderBtn');
+  const reloadBtn = document.getElementById('reloadBtn');
+  const folderPathEl = document.getElementById('folderPath');
+  const folderStateEl = document.getElementById('folderState');
+  const filterPanel = document.getElementById('filterPanel');
+  const filterBar = document.getElementById('filterBar');
+  const myTagsFilterSection = document.getElementById('myTagsFilterSection');
+  const suggestedFilterSection = document.getElementById('suggestedFilterSection');
+  const filterBarSuggested = document.getElementById('filterBarSuggested');
+  const grid = document.getElementById('grid');
+  const emptyHint = document.getElementById('emptyHint');
+  const countLabel = document.getElementById('countLabel');
+  const showTagsToggle = document.getElementById('showTagsToggle');
+  const showSuggestedToggle = document.getElementById('showSuggestedToggle');
+  const logEl = document.getElementById('log');
+
+  let dirHandle = null;
+  let catalog = []; // {filename, tags: [], source, originalName, addedAt, previewUrl}
+  let activeFilters = new Set();
+  let untaggedOnly = false;
+  let activeSuggestedFilters = new Set();
+
+  const SUPPORTED = !!(window.showDirectoryPicker && window.indexedDB);
+  if (!SUPPORTED) {
+    emptyHint.textContent = 'This app needs the File System Access API (Chrome or Edge on desktop).';
+    chooseFolderBtn.disabled = true;
+  }
+
+  const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif', 'avif', 'bmp', 'tiff', 'tif', 'svg'];
+
+  function extFromName(name) {
+    const m = /\.([a-zA-Z0-9]+)$/.exec(name || '');
+    return m ? m[1].toLowerCase() : '';
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function formatDateAdded(mtime) {
+    if (!mtime) return 'Unknown date';
+    return new Date(mtime).toLocaleString(undefined, {
+      month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+    });
+  }
+
+  function log(msg) {
+    const t = new Date().toLocaleTimeString();
+    logEl.insertAdjacentHTML('afterbegin', `<div>[${t}] ${msg}</div>`);
+  }
+
+  // ---------- Tag suggestions (remembered in localStorage) ----------
+  function getKnownTags() {
+    try { return JSON.parse(localStorage.getItem('knownTags') || '[]'); }
+    catch { return []; }
+  }
+  function rememberTags(tags) {
+    const known = new Set(getKnownTags());
+    tags.forEach(t => known.add(t));
+    localStorage.setItem('knownTags', JSON.stringify([...known]));
+  }
+
+  // ---------- IndexedDB: persist directory handle across reloads ----------
+  function idbOpen() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open('wedding-photo-uploader', 1);
+      req.onupgradeneeded = () => req.result.createObjectStore('handles');
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  async function idbSet(key, val) {
+    const db = await idbOpen();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('handles', 'readwrite');
+      tx.objectStore('handles').put(val, key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+  async function idbGet(key) {
+    const db = await idbOpen();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('handles', 'readonly');
+      const req = tx.objectStore('handles').get(key);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function setFolderUI(connected, name) {
+    if (connected) {
+      folderPathEl.textContent = name;
+      folderStateEl.textContent = 'connected';
+      folderStateEl.className = 'state ok';
+      reloadBtn.style.display = 'inline-block';
+    } else {
+      folderPathEl.textContent = name ? `${name} (click "Choose Photos Folder" to reconnect)` : 'not connected';
+      folderStateEl.textContent = 'not connected';
+      folderStateEl.className = 'state no';
+      reloadBtn.style.display = 'none';
+    }
+  }
+
+  async function connectFolder(handle) {
+    dirHandle = handle;
+    setFolderUI(true, handle.name);
+    await idbSet('photosDir', handle);
+    await loadCatalog();
+  }
+
+  async function tryRestoreFolder() {
+    if (!SUPPORTED) return;
+    try {
+      const handle = await idbGet('photosDir');
+      if (!handle) return;
+      const perm = await handle.queryPermission({ mode: 'readwrite' });
+      if (perm === 'granted') {
+        dirHandle = handle;
+        setFolderUI(true, handle.name);
+        log(`Reconnected to folder "${handle.name}".`);
+        await loadCatalog();
+      } else {
+        dirHandle = handle;
+        setFolderUI(false, handle.name);
+      }
+    } catch (e) {
+      // no stored handle
+    }
+  }
+
+  chooseFolderBtn.addEventListener('click', async () => {
+    try {
+      if (dirHandle) {
+        const perm = await dirHandle.requestPermission({ mode: 'readwrite' });
+        if (perm === 'granted') {
+          await connectFolder(dirHandle);
+          log(`Reconnected to folder "${dirHandle.name}".`);
+          return;
+        }
+      }
+      const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+      await connectFolder(handle);
+      log(`Connected to folder "${handle.name}".`);
+    } catch (e) {
+      if (e.name !== 'AbortError') log(`Could not connect to folder: ${e.message}`);
+    }
+  });
+
+  reloadBtn.addEventListener('click', () => loadCatalog());
+
+  // ---------- metadata.json read/write ----------
+  async function readMetadata() {
+    try {
+      const fh = await dirHandle.getFileHandle('metadata.json', { create: true });
+      const file = await fh.getFile();
+      const text = await file.text();
+      if (!text.trim()) return [];
+      return JSON.parse(text);
+    } catch (e) {
+      return [];
+    }
+  }
+
+  async function writeMetadata(list) {
+    const fh = await dirHandle.getFileHandle('metadata.json', { create: true });
+    const writable = await fh.createWritable();
+    await writable.write(JSON.stringify(list, null, 2));
+    await writable.close();
+  }
+
+  async function saveCatalogMetadata() {
+    const list = catalog.map(item => ({
+      filename: item.filename,
+      tags: item.tags,
+      source: item.source,
+      originalName: item.originalName,
+      addedAt: item.addedAt,
+      suggestedTags: item.suggestedTags
+    }));
+    await writeMetadata(list);
+  }
+
+  // ---------- Delete (move to trash) ----------
+  async function ensureUniqueNameIn(targetDirHandle, name) {
+    let candidate = name;
+    let n = 1;
+    while (true) {
+      try {
+        await targetDirHandle.getFileHandle(candidate, { create: false });
+        const dot = name.lastIndexOf('.');
+        candidate = dot === -1 ? `${name}-${n}` : `${name.slice(0, dot)}-${n}${name.slice(dot)}`;
+        n++;
+      } catch (e) {
+        return candidate;
+      }
+    }
+  }
+
+  async function deleteItem(item) {
+    const ok = window.confirm(`Move this photo to the "trash" folder inside your photos folder? You can recover it from there.`);
+    if (!ok) return;
+    try {
+      const trashDir = await dirHandle.getDirectoryHandle('trash', { create: true });
+      const srcHandle = await dirHandle.getFileHandle(item.filename);
+      const file = await srcHandle.getFile();
+      const trashName = await ensureUniqueNameIn(trashDir, item.filename);
+
+      const destHandle = await trashDir.getFileHandle(trashName, { create: true });
+      const writable = await destHandle.createWritable();
+      await writable.write(file);
+      await writable.close();
+
+      await dirHandle.removeEntry(item.filename);
+
+      if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+      catalog = catalog.filter(i => i.filename !== item.filename);
+      await saveCatalogMetadata();
+
+      log(`Moved "${item.filename}" to trash/${trashName}.`);
+      renderFilterBar();
+      renderGrid();
+    } catch (e) {
+      log(`Could not delete "${item.filename}": ${e.message}`);
+    }
+  }
+
+  // ---------- Loading the catalog ----------
+  async function loadCatalog() {
+    if (!dirHandle) return;
+    grid.querySelectorAll('.card').forEach(el => el.remove());
+    emptyHint.style.display = 'block';
+    emptyHint.textContent = 'Loading…';
+    try {
+      const metadata = await readMetadata();
+      const metaByName = new Map(metadata.map(m => [m.filename, m]));
+
+      const found = [];
+      for await (const entry of dirHandle.values()) {
+        if (entry.kind !== 'file') continue;
+        if (entry.name === 'metadata.json') continue;
+        if (!IMAGE_EXTENSIONS.includes(extFromName(entry.name))) continue;
+        found.push(entry.name);
+      }
+
+      catalog.forEach(i => i.previewUrl && URL.revokeObjectURL(i.previewUrl));
+      catalog = await Promise.all(found.map(async name => {
+        const meta = metaByName.get(name);
+        let previewUrl = null;
+        let mtime = 0;
+        try {
+          const fh = await dirHandle.getFileHandle(name);
+          const file = await fh.getFile();
+          previewUrl = URL.createObjectURL(file);
+          mtime = file.lastModified;
+        } catch (e) { /* leave placeholder */ }
+        return {
+          filename: name,
+          tags: meta ? [...meta.tags] : [],
+          suggestedTags: meta ? [...(meta.suggestedTags || [])] : [],
+          source: meta ? meta.source : 'local file',
+          originalName: meta ? meta.originalName : name,
+          addedAt: meta ? meta.addedAt : new Date().toISOString(),
+          previewUrl,
+          mtime
+        };
+      }));
+
+      // most recently added (by file modified time) on top
+      catalog.sort((a, b) => b.mtime - a.mtime);
+
+      activeFilters.clear();
+      untaggedOnly = false;
+      activeSuggestedFilters.clear();
+      emptyHint.textContent = catalog.length ? '' : 'No photos found in this folder yet.';
+      emptyHint.style.display = catalog.length ? 'none' : 'block';
+      rememberTags(catalog.flatMap(i => i.tags));
+      renderFilterBar();
+      renderGrid();
+    } catch (e) {
+      log(`Could not load catalog: ${e.message}`);
+    }
+  }
+
+  // ---------- Filter bar ----------
+  function renderFilterBar() {
+    const counts = new Map();
+    catalog.forEach(item => item.tags.forEach(t => counts.set(t, (counts.get(t) || 0) + 1)));
+    const tags = [...counts.keys()].sort((a, b) => counts.get(b) - counts.get(a) || a.localeCompare(b));
+    const untaggedCount = catalog.filter(item => !item.tags.length).length;
+
+    const suggestedCounts = new Map();
+    catalog.forEach(item => (item.suggestedTags || []).forEach(t => suggestedCounts.set(t, (suggestedCounts.get(t) || 0) + 1)));
+    const suggestedTags = [...suggestedCounts.keys()].sort((a, b) => suggestedCounts.get(b) - suggestedCounts.get(a) || a.localeCompare(b));
+
+    filterPanel.style.display = (tags.length || untaggedCount || suggestedTags.length) ? 'block' : 'none';
+    myTagsFilterSection.style.display = (tags.length || untaggedCount) ? '' : 'none';
+    filterBar.innerHTML = '';
+
+    if (untaggedCount) {
+      const btn = document.createElement('span');
+      btn.className = `filter-tag ${untaggedOnly ? 'active' : ''}`;
+      btn.innerHTML = `No tags<span class="count">${untaggedCount}</span>`;
+      btn.addEventListener('click', () => {
+        untaggedOnly = !untaggedOnly;
+        if (untaggedOnly) activeFilters.clear();
+        renderFilterBar();
+        renderGrid();
+      });
+      filterBar.appendChild(btn);
+    }
+
+    tags.forEach(tag => {
+      const btn = document.createElement('span');
+      btn.className = `filter-tag ${activeFilters.has(tag) ? 'active' : ''}`;
+      btn.innerHTML = `${escapeHtml(tag)}<span class="count">${counts.get(tag)}</span>`;
+      btn.addEventListener('click', () => {
+        untaggedOnly = false;
+        if (activeFilters.has(tag)) activeFilters.delete(tag);
+        else activeFilters.add(tag);
+        renderFilterBar();
+        renderGrid();
+      });
+      filterBar.appendChild(btn);
+    });
+
+    if (activeFilters.size || untaggedOnly || activeSuggestedFilters.size) {
+      const clear = document.createElement('button');
+      clear.className = 'clear-filters';
+      clear.textContent = 'Clear filters';
+      clear.addEventListener('click', () => {
+        activeFilters.clear();
+        untaggedOnly = false;
+        activeSuggestedFilters.clear();
+        renderFilterBar();
+        renderGrid();
+      });
+      filterBar.appendChild(clear);
+    }
+
+    suggestedFilterSection.style.display = suggestedTags.length ? '' : 'none';
+    filterBarSuggested.innerHTML = '';
+    suggestedTags.forEach(tag => {
+      const btn = document.createElement('span');
+      btn.className = `filter-tag-suggested ${activeSuggestedFilters.has(tag) ? 'active' : ''}`;
+      btn.innerHTML = `${escapeHtml(tag)}<span class="count">${suggestedCounts.get(tag)}</span>`;
+      btn.addEventListener('click', () => {
+        if (activeSuggestedFilters.has(tag)) activeSuggestedFilters.delete(tag);
+        else activeSuggestedFilters.add(tag);
+        renderFilterBar();
+        renderGrid();
+      });
+      filterBarSuggested.appendChild(btn);
+    });
+  }
+
+  // ---------- Grid ----------
+  function visibleItems() {
+    let items = catalog;
+    if (untaggedOnly) items = items.filter(item => !item.tags.length);
+    else if (activeFilters.size) items = items.filter(item => [...activeFilters].every(t => item.tags.includes(t)));
+    if (activeSuggestedFilters.size) {
+      items = items.filter(item => [...activeSuggestedFilters].every(t => (item.suggestedTags || []).includes(t)));
+    }
+    return items;
+  }
+
+  function renderGrid() {
+    grid.querySelectorAll('.card').forEach(el => el.remove());
+    const visible = visibleItems();
+    const labelParts = [];
+    if (untaggedOnly) labelParts.push('no tags');
+    else if (activeFilters.size) labelParts.push([...activeFilters].join(', '));
+    if (activeSuggestedFilters.size) labelParts.push('suggested: ' + [...activeSuggestedFilters].join(', '));
+    const filterLabel = labelParts.join(' + ');
+    countLabel.textContent = catalog.length
+      ? `Showing ${visible.length} of ${catalog.length} photo(s)${filterLabel ? ' — filtered by: ' + filterLabel : ''}`
+      : '';
+
+    if (catalog.length && !visible.length) {
+      emptyHint.textContent = 'No photos match the selected tags.';
+      emptyHint.style.display = 'block';
+    } else if (!catalog.length) {
+      emptyHint.style.display = 'block';
+    } else {
+      emptyHint.style.display = 'none';
+    }
+
+    visible.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.filename = item.filename;
+      card.innerHTML = `
+        <div class="thumb-wrap">
+          ${thumbHtml(item)}
+          <button class="delete-btn" title="Move to trash">✕</button>
+        </div>
+        <div class="card-body">
+          <div class="card-name" title="${escapeHtml(item.filename)}">${escapeHtml(formatDateAdded(item.mtime))}</div>
+          <div class="my-tags-details">
+            <div class="pills"></div>
+            <div class="add-tag-wrap">
+              <input type="text" class="add-tag-input" autocomplete="off" placeholder="add tag, press Enter">
+              <div class="tag-suggest" style="display:none;"></div>
+            </div>
+          </div>
+          <div class="suggested-details">
+            <div class="pills-suggested"></div>
+          </div>
+        </div>
+      `;
+      renderPills(card, item);
+      renderSuggestedPills(card, item);
+      setupTagAutocomplete(card, item);
+      card.querySelector('.delete-btn').addEventListener('click', () => deleteItem(item));
+      grid.appendChild(card);
+    });
+  }
+
+  function setupTagAutocomplete(card, item) {
+    const addInput = card.querySelector('.add-tag-input');
+    const suggestBox = card.querySelector('.tag-suggest');
+    let matches = [];
+    let activeIndex = -1;
+
+    function getMatches(query) {
+      const q = query.trim().toLowerCase();
+      return getKnownTags()
+        .filter(t => !item.tags.some(x => x.toLowerCase() === t.toLowerCase()))
+        .filter(t => !q || t.toLowerCase().startsWith(q))
+        .sort((a, b) => a.localeCompare(b))
+        .slice(0, 8);
+    }
+
+    function renderSuggest() {
+      if (!matches.length) {
+        suggestBox.style.display = 'none';
+        suggestBox.innerHTML = '';
+        return;
+      }
+      suggestBox.style.display = 'block';
+      suggestBox.innerHTML = matches
+        .map((t, i) => `<div class="tag-suggest-item ${i === activeIndex ? 'active' : ''}" data-index="${i}">${escapeHtml(t)}</div>`)
+        .join('');
+      suggestBox.querySelectorAll('.tag-suggest-item').forEach(el => {
+        el.addEventListener('mousedown', (e) => {
+          e.preventDefault(); // keep input focused so blur doesn't close the list first
+          selectMatch(+el.dataset.index);
+        });
+      });
+    }
+
+    function openSuggest(query) {
+      matches = getMatches(query);
+      activeIndex = -1;
+      renderSuggest();
+    }
+
+    function closeSuggest() {
+      matches = [];
+      activeIndex = -1;
+      suggestBox.style.display = 'none';
+      suggestBox.innerHTML = '';
+    }
+
+    async function selectMatch(idx) {
+      const tag = matches[idx];
+      if (!tag) return;
+      closeSuggest();
+      addInput.value = '';
+      await addTag(item, tag);
+    }
+
+    addInput.addEventListener('input', () => openSuggest(addInput.value));
+    addInput.addEventListener('focus', () => openSuggest(addInput.value));
+    addInput.addEventListener('blur', () => closeSuggest());
+    addInput.addEventListener('keydown', async (e) => {
+      if (e.key === 'ArrowDown') {
+        if (!matches.length) return;
+        e.preventDefault();
+        activeIndex = (activeIndex + 1) % matches.length;
+        renderSuggest();
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        if (!matches.length) return;
+        e.preventDefault();
+        activeIndex = (activeIndex - 1 + matches.length) % matches.length;
+        renderSuggest();
+        return;
+      }
+      if (e.key === 'Escape') {
+        closeSuggest();
+        return;
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        const atStart = addInput.selectionStart === 0 && addInput.selectionEnd === 0;
+        const atEnd = addInput.selectionStart === addInput.value.length && addInput.selectionEnd === addInput.value.length;
+        if (e.key === 'ArrowLeft' && atStart) {
+          e.preventDefault();
+          closeSuggest();
+          focusAdjacentCard(card, -1);
+          return;
+        }
+        if (e.key === 'ArrowRight' && atEnd) {
+          e.preventDefault();
+          closeSuggest();
+          focusAdjacentCard(card, 1);
+          return;
+        }
+        return;
+      }
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        if (activeIndex >= 0 && matches[activeIndex]) {
+          await selectMatch(activeIndex);
+          return;
+        }
+        const raw = addInput.value.trim().replace(/,$/, '');
+        if (raw) {
+          closeSuggest();
+          await addTag(item, raw);
+          addInput.value = '';
+        }
+      }
+    });
+  }
+
+  function thumbHtml(item) {
+    return item.previewUrl
+      ? `<img class="thumb" src="${item.previewUrl}">`
+      : `<div class="thumb-placeholder">loading…</div>`;
+  }
+
+  function cssEscape(s) {
+    return window.CSS && CSS.escape ? CSS.escape(s) : s.replace(/["\\]/g, '\\$&');
+  }
+
+  function renderPills(card, item) {
+    const pillsEl = card.querySelector('.pills');
+    pillsEl.innerHTML = '';
+    item.tags.forEach(tag => {
+      const pill = document.createElement('span');
+      pill.className = 'pill';
+      pill.innerHTML = `${escapeHtml(tag)}<span class="x">✕</span>`;
+      pill.querySelector('.x').addEventListener('click', () => removeTag(item, tag));
+      pillsEl.appendChild(pill);
+    });
+  }
+
+  function renderSuggestedPills(card, item) {
+    const pillsEl = card.querySelector('.pills-suggested');
+    if (!pillsEl) return;
+    pillsEl.innerHTML = '';
+    const remaining = (item.suggestedTags || [])
+      .filter(t => !item.tags.some(x => x.toLowerCase() === t.toLowerCase()));
+    remaining.forEach(tag => {
+      const pill = document.createElement('span');
+      pill.className = 'pill-suggested';
+      pill.title = 'Click to add as a tag';
+      pill.innerHTML = `<span class="plus">+</span>${escapeHtml(tag)}`;
+      pill.addEventListener('click', () => addTag(item, tag));
+      pillsEl.appendChild(pill);
+    });
+  }
+
+  async function addTag(item, rawTag) {
+    const tag = rawTag.trim();
+    if (!tag) return;
+    if (item.tags.some(t => t.toLowerCase() === tag.toLowerCase())) return;
+    item.tags.push(tag);
+    rememberTags([tag]);
+    try {
+      await saveCatalogMetadata();
+      log(`Added tag "${tag}" to "${item.filename}".`);
+    } catch (e) {
+      log(`Could not save tag: ${e.message}`);
+    }
+    renderFilterBar();
+    renderGrid();
+    focusAddInput(item);
+  }
+
+  function focusAddInput(item) {
+    const card = grid.querySelector(`.card[data-filename="${cssEscape(item.filename)}"]`);
+    const input = card && card.querySelector('.add-tag-input');
+    if (input) input.focus();
+  }
+
+  function focusAdjacentCard(currentCard, direction) {
+    const cards = [...grid.querySelectorAll('.card')];
+    const idx = cards.indexOf(currentCard);
+    if (idx === -1) return;
+    const target = cards[idx + direction];
+    if (!target) return;
+    const input = target.querySelector('.add-tag-input');
+    if (input) {
+      input.focus();
+      const pos = input.value.length;
+      input.setSelectionRange(pos, pos);
+      target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }
+
+  async function removeTag(item, tag) {
+    item.tags = item.tags.filter(t => t !== tag);
+    try {
+      await saveCatalogMetadata();
+      log(`Removed tag "${tag}" from "${item.filename}".`);
+    } catch (e) {
+      log(`Could not save tag change: ${e.message}`);
+    }
+    renderFilterBar();
+    renderGrid();
+  }
+
+  // ---------- Show/hide tags under photos ----------
+  const showTags = localStorage.getItem('showTags') !== 'false';
+  showTagsToggle.checked = showTags;
+  document.body.classList.toggle('hide-tags', !showTags);
+  showTagsToggle.addEventListener('change', () => {
+    document.body.classList.toggle('hide-tags', !showTagsToggle.checked);
+    localStorage.setItem('showTags', showTagsToggle.checked);
+  });
+
+  const showSuggested = localStorage.getItem('showSuggested') !== 'false';
+  showSuggestedToggle.checked = showSuggested;
+  document.body.classList.toggle('hide-suggested', !showSuggested);
+  showSuggestedToggle.addEventListener('change', () => {
+    document.body.classList.toggle('hide-suggested', !showSuggestedToggle.checked);
+    localStorage.setItem('showSuggested', showSuggestedToggle.checked);
+  });
+
+  // ---------- init ----------
+  tryRestoreFolder();
+})();
+</script>
+</body>
+</html>
