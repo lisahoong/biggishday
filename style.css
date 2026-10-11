@@ -252,6 +252,15 @@ h2 {
 .form-row .small { font-size: .7rem; letter-spacing: .04em; }
 .side-footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-top: 1.25rem; border-top: 1px solid var(--line); font-size: .72rem; letter-spacing: .04em; }
 
+/* Drag and drop */
+.drop-overlay {
+  position: fixed; inset: 0; z-index: 60; pointer-events: none;
+  display: grid; place-items: center;
+  background: rgba(246, 243, 238, .88); outline: 1.5px dashed var(--ink); outline-offset: -1.25rem;
+}
+.drop-overlay[hidden] { display: none; }
+.drop-overlay p { font-family: var(--serif); font-size: 2rem; color: var(--ink); }
+
 /* Toasts */
 .toasts { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); z-index: 100; display: grid; gap: .5rem; justify-items: center; }
 .toast {

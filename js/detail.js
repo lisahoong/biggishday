@@ -1,8 +1,8 @@
-import * as api from './api.js?v=3';
-import { state, listFor, allTags, TRASH_DAYS } from './state.js?v=3';
-import { Markup } from './markup.js?v=3';
-import { restore } from './trash.js?v=3';
-import { h, icon, toast, errorMessage, timeAgo, formatDate, normalizeTag, isTyping } from './ui.js?v=3';
+import * as api from './api.js?v=4';
+import { state, listFor, allTags, TRASH_DAYS } from './state.js?v=4';
+import { Markup } from './markup.js?v=4';
+import { restore } from './trash.js?v=4';
+import { h, icon, toast, errorMessage, timeAgo, formatDate, normalizeTag, isTyping } from './ui.js?v=4';
 
 let view = null;
 

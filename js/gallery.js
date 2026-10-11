@@ -1,7 +1,7 @@
-import * as api from './api.js?v=3';
-import { state, listFor, allTags } from './state.js?v=3';
-import { openDetail } from './detail.js?v=3';
-import { h, icon, toast, errorMessage, masonry } from './ui.js?v=3';
+import * as api from './api.js?v=4';
+import { state, listFor, allTags } from './state.js?v=4';
+import { openDetail } from './detail.js?v=4';
+import { h, icon, toast, errorMessage, masonry } from './ui.js?v=4';
 
 const MAX_EDGE = 2400;
 const byAdded = (a, b) => Date.parse(b.created_at) - Date.parse(a.created_at);
@@ -14,6 +14,7 @@ const SORTS = {
 let filtersEl, gridEl, countEl, trashBtn;
 
 export function renderGallery(root, { onSignOut, onChangeName, onOpenTrash }) {
+  enableDrop();
   const search = h('input', {
     type: 'search', class: 'search', placeholder: 'Search', 'aria-label': 'Search tags and comments',
     value: state.search,
@@ -92,7 +93,7 @@ export function refreshGallery() {
 
   const empty = state.photos.length
     ? h('div', { class: 'empty' }, h('p', {}, 'Nothing matches those filters.'))
-    : h('div', { class: 'empty' }, h('p', {}, 'No photos yet.'), h('p', { class: 'muted' }, 'Use “Add photos” to start the board.'));
+    : h('div', { class: 'empty' }, h('p', {}, 'No photos yet.'), h('p', { class: 'muted' }, 'Use “Add photos”, or drag or paste photos onto the page.'));
   masonry(gridEl, photos.map((p) => card(p, ids)), empty);
 }
 
@@ -139,6 +140,106 @@ async function prepareImage(file) {
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error(`${file.name}: couldn't process image`))), 'image/jpeg', 0.85);
   });
+}
+
+// Drag images onto the board to add them: files from Finder, or images from another browser
+// window. Paste (⌘V) also works, which helps for sites that block downloading their images.
+// Listeners are set up once on the document and only act while the gallery is showing.
+const COPY_TIP = 'Right-click the image, choose Copy Image, then press ⌘V (Ctrl+V) here.';
+let dropReady = false;
+
+function enableDrop() {
+  if (dropReady) return;
+  dropReady = true;
+  const overlay = h('div', { class: 'drop-overlay', hidden: true }, h('p', {}, 'Drop photos to add them'));
+  document.body.append(overlay);
+  const inGallery = () => gridEl?.isConnected;
+  // Drags that start on this page (e.g. a board photo) aren't new photos.
+  let internal = false;
+  const droppable = (e) => !internal && ['Files', 'text/uri-list'].some((t) => e.dataTransfer?.types.includes(t));
+  let depth = 0;
+  const hide = () => { depth = 0; overlay.hidden = true; };
+
+  document.addEventListener('dragstart', () => { internal = true; });
+  document.addEventListener('dragend', () => { internal = false; });
+  document.addEventListener('dragenter', (e) => {
+    if (!droppable(e) || !inGallery()) return;
+    depth++;
+    overlay.hidden = false;
+  });
+  document.addEventListener('dragleave', (e) => {
+    if (droppable(e) && --depth <= 0) hide();
+  });
+  document.addEventListener('dragover', (e) => {
+    if (!droppable(e)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = inGallery() ? 'copy' : 'none';
+  });
+  document.addEventListener('drop', (e) => {
+    if (!droppable(e)) return;
+    e.preventDefault();
+    hide();
+    if (inGallery()) addDropped(e.dataTransfer);
+  });
+  document.addEventListener('paste', (e) => {
+    const images = [...(e.clipboardData?.files || [])].filter((f) => f.type.startsWith('image/'));
+    if (!images.length || !inGallery()) return;
+    e.preventDefault();
+    uploadFiles(images);
+  });
+}
+
+function addDropped(dt) {
+  const files = [...dt.files];
+  if (files.length) {
+    const images = files.filter((f) => f.type.startsWith('image/'));
+    if (images.length < files.length) toast('Only image files can be added.', { kind: 'error' });
+    return uploadFiles(images);
+  }
+  const url = droppedImageUrl(dt);
+  if (!url) return toast(`Couldn't find an image in what was dropped. ${COPY_TIP}`, { kind: 'error' });
+  addFromUrl(url);
+}
+
+// A dragged image inside a link (common on Pinterest and the like) gives the link as the URL,
+// so prefer the <img> in the dragged HTML.
+function droppedImageUrl(dt) {
+  const html = dt.getData('text/html');
+  const src = html && new DOMParser().parseFromString(html, 'text/html').querySelector('img')?.getAttribute('src');
+  const candidates = [src, ...dt.getData('text/uri-list').split(/\r?\n/).filter((l) => l && !l.startsWith('#'))];
+  for (const c of candidates) {
+    try {
+      const url = new URL(c);
+      if (['http:', 'https:', 'data:'].includes(url.protocol)) return url.href;
+    } catch { /* relative or malformed; try the next one */ }
+  }
+  return null;
+}
+
+async function addFromUrl(url) {
+  const progress = toast('Fetching image…', { sticky: true });
+  let blob;
+  try {
+    const res = await fetch(url, { referrerPolicy: 'no-referrer' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    blob = await res.blob();
+  } catch {
+    // Almost always the site not allowing other pages to download its images (CORS).
+    progress.close();
+    return toast(`That site doesn't let its images be downloaded here. ${COPY_TIP}`, { kind: 'error' });
+  }
+  progress.close();
+  if (!blob.type.startsWith('image/')) return toast(`That link isn't an image. ${COPY_TIP}`, { kind: 'error' });
+  uploadFiles([new File([blob], fileNameFrom(url), { type: blob.type })]);
+}
+
+function fileNameFrom(url) {
+  if (url.startsWith('data:')) return 'dropped-image';
+  try {
+    return decodeURIComponent(new URL(url).pathname.split('/').pop()) || 'dropped-image';
+  } catch {
+    return 'dropped-image';
+  }
 }
 
 async function uploadFiles(files) {
