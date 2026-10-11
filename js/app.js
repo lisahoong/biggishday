@@ -1,8 +1,8 @@
-import * as api from './api.js?v=4';
-import { state } from './state.js?v=4';
-import { renderGallery } from './gallery.js?v=4';
-import { renderTrash, purgeExpired } from './trash.js?v=4';
-import { h, errorMessage } from './ui.js?v=4';
+import * as api from './api.js?v=5';
+import { state } from './state.js?v=5';
+import { renderGallery } from './gallery.js?v=5';
+import { renderTrash, purgeExpired } from './trash.js?v=5';
+import { h, errorMessage } from './ui.js?v=5';
 
 const NAME_KEY = 'board.name';
 const root = document.getElementById('app');

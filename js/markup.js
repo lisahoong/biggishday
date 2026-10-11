@@ -1,6 +1,6 @@
-import * as api from './api.js?v=4';
-import { state, listFor } from './state.js?v=4';
-import { h, icon, toast, errorMessage } from './ui.js?v=4';
+import * as api from './api.js?v=5';
+import { state, listFor } from './state.js?v=5';
+import { h, icon, toast, errorMessage } from './ui.js?v=5';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const COLORS = ['#e11d48', '#f59e0b', '#16a34a', '#2563eb', '#ffffff'];

@@ -5,7 +5,8 @@ export const state = {
   trash: [],
   comments: new Map(),
   markings: new Map(),
-  filterTags: new Set(),
+  // The board opens filtered to this tag; dropped automatically if no photo has it.
+  filterTags: new Set(['inspiration']),
   search: '',
   sort: 'newest',
   // Bumped on every local edit so a slower background refresh can't overwrite it.

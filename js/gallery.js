@@ -1,7 +1,7 @@
-import * as api from './api.js?v=4';
-import { state, listFor, allTags } from './state.js?v=4';
-import { openDetail } from './detail.js?v=4';
-import { h, icon, toast, errorMessage, masonry } from './ui.js?v=4';
+import * as api from './api.js?v=5';
+import { state, listFor, allTags } from './state.js?v=5';
+import { openDetail } from './detail.js?v=5';
+import { h, icon, toast, errorMessage, masonry, normalizeTag } from './ui.js?v=5';
 
 const MAX_EDGE = 2400;
 const byAdded = (a, b) => Date.parse(b.created_at) - Date.parse(a.created_at);
@@ -11,7 +11,10 @@ const SORTS = {
   comments: ['Most comments', (a, b) => listFor(state.comments, b.id).length - listFor(state.comments, a.id).length || byAdded(a, b)],
 };
 
-let filtersEl, gridEl, countEl, trashBtn;
+let filtersEl, gridEl, countEl, trashBtn, selectBtn, selectBar;
+// Select mode: clicking photos toggles them, and the bottom bar tags them all at once.
+let selecting = false;
+const selected = new Set();
 
 export function renderGallery(root, { onSignOut, onChangeName, onOpenTrash }) {
   enableDrop();
@@ -35,6 +38,10 @@ export function renderGallery(root, { onSignOut, onChangeName, onOpenTrash }) {
   sort.addEventListener('change', () => { state.sort = sort.value; refreshGallery(); });
   gridEl = h('main', { class: 'masonry' });
   trashBtn = h('button', { class: 'link-btn', onClick: onOpenTrash });
+  selecting = false;
+  selected.clear();
+  selectBtn = h('button', { class: 'link-btn select-toggle', onClick: () => setSelecting(!selecting) }, 'Select');
+  selectBar = renderSelectBar();
 
   root.replaceChildren(
     h('header', { class: 'topbar' },
@@ -47,8 +54,9 @@ export function renderGallery(root, { onSignOut, onChangeName, onOpenTrash }) {
         trashBtn,
         h('button', { class: 'link-btn', onClick: onSignOut }, 'Sign out'))),
     filtersEl,
-    h('div', { class: 'count-row' }, countEl, sort),
+    h('div', { class: 'count-row' }, countEl, h('div', { class: 'count-actions' }, selectBtn, sort)),
     gridEl,
+    selectBar,
   );
   refreshGallery();
 }
@@ -95,18 +103,116 @@ export function refreshGallery() {
     ? h('div', { class: 'empty' }, h('p', {}, 'Nothing matches those filters.'))
     : h('div', { class: 'empty' }, h('p', {}, 'No photos yet.'), h('p', { class: 'muted' }, 'Use “Add photos”, or drag or paste photos onto the page.'));
   masonry(gridEl, photos.map((p) => card(p, ids)), empty);
+  updateSelectBar();
+}
+
+function setSelecting(on) {
+  selecting = on;
+  selected.clear();
+  selectBtn.textContent = on ? 'Done' : 'Select';
+  gridEl.classList.toggle('is-selecting', on);
+  for (const el of gridEl.querySelectorAll('.card')) {
+    el.classList.remove('is-selected');
+    if (on) el.setAttribute('aria-pressed', 'false');
+    else el.removeAttribute('aria-pressed');
+  }
+  updateSelectBar();
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && selecting && gridEl?.isConnected) setSelecting(false);
+});
+
+function toggleSelected(photo, el) {
+  if (selected.has(photo.id)) selected.delete(photo.id);
+  else selected.add(photo.id);
+  el.classList.toggle('is-selected', selected.has(photo.id));
+  el.setAttribute('aria-pressed', String(selected.has(photo.id)));
+  updateSelectBar();
+}
+
+function renderSelectBar() {
+  const input = h('input', {
+    class: 'tag-input', list: 'bulk-tag-suggestions', placeholder: 'Tag to add, e.g. centerpiece',
+    'aria-label': 'Tag to add to selected photos', autocomplete: 'off',
+  });
+  const form = h('form', { class: 'select-form' }, input,
+    h('button', { class: 'btn btn-primary', type: 'submit' }, 'Add tag'),
+    h('datalist', { id: 'bulk-tag-suggestions' }));
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const tags = input.value.split(',').map(normalizeTag).filter(Boolean);
+    if (!tags.length) return;
+    input.value = '';
+    tagSelected(tags);
+  });
+  const bar = h('div', { class: 'select-bar', hidden: true, role: 'region', 'aria-label': 'Selected photos' },
+    h('span', { class: 'select-count' }),
+    h('button', { class: 'link-btn', onClick: selectAllVisible }, 'Select all'),
+    form,
+    h('button', { class: 'link-btn', onClick: () => setSelecting(false) }, 'Done'));
+  return bar;
+}
+
+function updateSelectBar() {
+  if (!selectBar) return;
+  // Drop selections for photos deleted since they were picked.
+  for (const id of selected) if (!state.photos.some((p) => p.id === id)) selected.delete(id);
+  selectBar.hidden = !selecting;
+  const n = selected.size;
+  selectBar.querySelector('.select-count').textContent = n ? `${n} selected` : 'Click photos to select them';
+  selectBar.querySelector('.select-form button').disabled = !n;
+  selectBar.querySelector('datalist').replaceChildren(...allTags().map(([t]) => h('option', { value: t })));
+}
+
+function selectAllVisible() {
+  for (const p of visiblePhotos()) selected.add(p.id);
+  for (const el of gridEl.querySelectorAll('.card')) {
+    el.classList.add('is-selected');
+    el.setAttribute('aria-pressed', 'true');
+  }
+  updateSelectBar();
+}
+
+async function tagSelected(tags) {
+  const changes = state.photos
+    .filter((p) => selected.has(p.id))
+    .map((photo) => ({ photo, before: photo.tags, after: [...new Set([...photo.tags, ...tags])] }))
+    .filter((c) => c.after.length !== c.before.length);
+  const label = tags.map((t) => `“${t}”`).join(', ');
+  if (!changes.length) return toast(`The selected photos already have ${label}.`);
+
+  for (const c of changes) c.photo.tags = c.after;
+  state.version++;
+  refreshGallery();
+  const results = await Promise.allSettled(changes.map((c) => api.updateTags(c.photo.id, c.after)));
+  const failed = changes.filter((_, i) => results[i].status === 'rejected');
+  for (const c of failed) c.photo.tags = c.before;
+  if (failed.length) {
+    refreshGallery();
+    toast(`Couldn't tag ${failed.length} photo${failed.length === 1 ? '' : 's'}: ${errorMessage(results.find((r) => r.status === 'rejected').reason)}`, { kind: 'error' });
+  }
+  const done = changes.length - failed.length;
+  if (done) toast(`Added ${label} to ${done} photo${done === 1 ? '' : 's'}.`);
 }
 
 function card(photo, ids) {
   const comments = listFor(state.comments, photo.id).length;
   const marks = listFor(state.markings, photo.id).length;
   const shownTags = photo.tags.slice(0, 4);
-  const open = () => openDetail(photo.id, ids, refreshGallery);
+  const isSelected = selecting && selected.has(photo.id);
+  const activate = (e) => {
+    if (selecting) toggleSelected(photo, e.currentTarget);
+    else openDetail(photo.id, ids, refreshGallery);
+  };
   return h('figure', {
-    class: 'card', tabindex: '0', role: 'button', 'aria-label': `Open photo${photo.tags.length ? `: ${photo.tags.join(', ')}` : ''}`,
-    onClick: open,
-    onKeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } },
+    class: `card ${isSelected ? 'is-selected' : ''}`, tabindex: '0', role: 'button',
+    'aria-label': `Photo${photo.tags.length ? `: ${photo.tags.join(', ')}` : ''}`,
+    'aria-pressed': selecting ? String(isSelected) : null,
+    onClick: activate,
+    onKeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(e); } },
   },
+  h('span', { class: 'card-check', 'aria-hidden': 'true' }),
   h('img', { src: photo.url, alt: '', loading: 'lazy', decoding: 'async' }),
   shownTags.length || comments || marks
     ? h('figcaption', {},
