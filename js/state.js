@@ -1,13 +1,22 @@
 export const state = {
   me: null,
   photos: [],
+  // Photos in the trash, most recently trashed first.
+  trash: [],
   comments: new Map(),
   markings: new Map(),
   filterTags: new Set(),
   search: '',
+  sort: 'newest',
   // Bumped on every local edit so a slower background refresh can't overwrite it.
   version: 0,
 };
+
+export const TRASH_DAYS = 30;
+
+export function trashExpiry(photo) {
+  return Date.parse(photo.deleted_at) + TRASH_DAYS * 86400000;
+}
 
 export function listFor(map, photoId) {
   if (!map.has(photoId)) map.set(photoId, []);

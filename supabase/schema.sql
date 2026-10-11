@@ -22,6 +22,10 @@ create table if not exists public.photos (
   created_at    timestamptz not null default now()
 );
 
+-- Trash: a set deleted_at means the photo is in the trash. The app removes it for good 30 days later.
+alter table public.photos add column if not exists deleted_at      timestamptz;
+alter table public.photos add column if not exists deleted_by_name text;
+
 create table if not exists public.comments (
   id          uuid primary key default gen_random_uuid(),
   photo_id    uuid not null references public.photos (id) on delete cascade,

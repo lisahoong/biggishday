@@ -12,6 +12,8 @@ and drawn markings that can be shown or hidden.
 2. Enter your name once per device. It's shown next to your comments, marks, and uploads.
 3. Click a photo to view it large, add tags, comment, or draw on it (**Draw** → pen / arrow / circle).
    **Markings shown / hidden** toggles marks for your own view only.
+4. **Delete photo** moves a photo to the **Trash** (link in the top bar), where either of you can restore it.
+   Photos are deleted for good 30 days after being trashed, the next time someone opens the board.
 
 Edits save immediately. The other person sees them after refreshing.
 

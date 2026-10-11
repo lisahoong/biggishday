@@ -1,7 +1,8 @@
-import * as api from './api.js?v=2';
-import { state } from './state.js?v=2';
-import { renderGallery } from './gallery.js?v=2';
-import { h, errorMessage } from './ui.js?v=2';
+import * as api from './api.js?v=3';
+import { state } from './state.js?v=3';
+import { renderGallery } from './gallery.js?v=3';
+import { renderTrash, purgeExpired } from './trash.js?v=3';
+import { h, errorMessage } from './ui.js?v=3';
 
 const NAME_KEY = 'board.name';
 const root = document.getElementById('app');
@@ -55,7 +56,9 @@ async function loadBoard() {
   message('Loading…', 'Fetching the board.');
   try {
     const { photos, comments, markings } = await api.loadBoard();
-    state.photos = photos;
+    state.photos = photos.filter((p) => !p.deleted_at);
+    state.trash = photos.filter((p) => p.deleted_at).sort((a, b) => Date.parse(b.deleted_at) - Date.parse(a.deleted_at));
+    purgeExpired();
     state.comments = groupBy(comments);
     state.markings = groupBy(markings);
     renderGallery(root, galleryActions);
@@ -68,6 +71,7 @@ async function loadBoard() {
 const galleryActions = {
   onSignOut: () => api.signOut(),
   onChangeName: () => askName(() => renderGallery(root, galleryActions)),
+  onOpenTrash: () => renderTrash(root, { onBack: () => renderGallery(root, galleryActions) }),
 };
 
 function boot(session) {

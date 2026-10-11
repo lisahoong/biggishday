@@ -1,5 +1,5 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm';
-import { SUPABASE_URL, SUPABASE_ANON_KEY, BOARD_EMAIL } from './config.js?v=2';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, BOARD_EMAIL } from './config.js?v=3';
 
 export const configured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 const sb = configured ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
@@ -81,6 +81,24 @@ export async function updateTags(photoId, tags) {
   return check(await sb.from('photos').update({ tags }).eq('id', photoId).select().single());
 }
 
+export async function trashPhoto(photoId, deletedBy) {
+  const rows = check(
+    await sb.from('photos').update({ deleted_at: new Date().toISOString(), deleted_by_name: deletedBy })
+      .eq('id', photoId).is('deleted_at', null).select('deleted_at, deleted_by_name'),
+  );
+  if (!rows.length) throw new Error('Photo was already removed.');
+  return rows[0];
+}
+
+export async function restorePhoto(photoId) {
+  const rows = check(
+    await sb.from('photos').update({ deleted_at: null, deleted_by_name: null })
+      .eq('id', photoId).not('deleted_at', 'is', null).select('id'),
+  );
+  if (!rows.length) throw new Error('Photo is no longer in the trash.');
+}
+
+// Permanent: removes the row (comments and markings cascade) and the image file.
 export async function deletePhoto(photo) {
   // Row first: a leftover file is harmless, a row pointing at a missing file is a broken card.
   const deleted = check(await sb.from('photos').delete().eq('id', photo.id).select('id'));

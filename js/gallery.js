@@ -1,13 +1,19 @@
-import * as api from './api.js?v=2';
-import { state, listFor, allTags } from './state.js?v=2';
-import { openDetail } from './detail.js?v=2';
-import { h, icon, toast, errorMessage } from './ui.js?v=2';
+import * as api from './api.js?v=3';
+import { state, listFor, allTags } from './state.js?v=3';
+import { openDetail } from './detail.js?v=3';
+import { h, icon, toast, errorMessage, masonry } from './ui.js?v=3';
 
 const MAX_EDGE = 2400;
+const byAdded = (a, b) => Date.parse(b.created_at) - Date.parse(a.created_at);
+const SORTS = {
+  newest: ['Newest first', byAdded],
+  oldest: ['Oldest first', (a, b) => byAdded(b, a)],
+  comments: ['Most comments', (a, b) => listFor(state.comments, b.id).length - listFor(state.comments, a.id).length || byAdded(a, b)],
+};
 
-let filtersEl, gridEl, countEl;
+let filtersEl, gridEl, countEl, trashBtn;
 
-export function renderGallery(root, { onSignOut, onChangeName }) {
+export function renderGallery(root, { onSignOut, onChangeName, onOpenTrash }) {
   const search = h('input', {
     type: 'search', class: 'search', placeholder: 'Search', 'aria-label': 'Search tags and comments',
     value: state.search,
@@ -23,7 +29,11 @@ export function renderGallery(root, { onSignOut, onChangeName }) {
 
   filtersEl = h('div', { class: 'filters', role: 'group', 'aria-label': 'Filter by tag' });
   countEl = h('p', { class: 'count muted' });
+  const sort = h('select', { class: 'sort', 'aria-label': 'Sort photos' },
+    Object.entries(SORTS).map(([key, [label]]) => h('option', { value: key, selected: key === state.sort }, label)));
+  sort.addEventListener('change', () => { state.sort = sort.value; refreshGallery(); });
   gridEl = h('main', { class: 'masonry' });
+  trashBtn = h('button', { class: 'link-btn', onClick: onOpenTrash });
 
   root.replaceChildren(
     h('header', { class: 'topbar' },
@@ -33,9 +43,10 @@ export function renderGallery(root, { onSignOut, onChangeName }) {
       fileInput,
       h('div', { class: 'me' },
         h('button', { class: 'link-btn me-name', title: 'Change your name', onClick: onChangeName }, state.me.name),
+        trashBtn,
         h('button', { class: 'link-btn', onClick: onSignOut }, 'Sign out'))),
     filtersEl,
-    countEl,
+    h('div', { class: 'count-row' }, countEl, sort),
     gridEl,
   );
   refreshGallery();
@@ -48,11 +59,12 @@ function visiblePhotos() {
     if (!q) return true;
     return p.tags.some((t) => t.includes(q))
       || listFor(state.comments, p.id).some((c) => c.body.toLowerCase().includes(q));
-  });
+  }).sort(SORTS[state.sort][1]);
 }
 
 export function refreshGallery() {
   if (!gridEl) return;
+  trashBtn.textContent = state.trash.length ? `Trash (${state.trash.length})` : 'Trash';
   const tags = allTags();
   for (const t of [...state.filterTags]) if (!tags.some(([x]) => x === t)) state.filterTags.delete(t);
 
@@ -78,16 +90,10 @@ export function refreshGallery() {
     ? `${photos.length} photo${photos.length === 1 ? '' : 's'}`
     : `Showing ${photos.length} of ${state.photos.length}`;
 
-  if (!state.photos.length) {
-    gridEl.replaceChildren(h('div', { class: 'empty' }, h('p', {}, 'No photos yet.'), h('p', { class: 'muted' }, 'Use “Add photos” to start the board.')));
-    return;
-  }
-  if (!photos.length) {
-    gridEl.replaceChildren(h('div', { class: 'empty' }, h('p', {}, 'Nothing matches those filters.')));
-    return;
-  }
-
-  gridEl.replaceChildren(...photos.map((p) => card(p, ids)));
+  const empty = state.photos.length
+    ? h('div', { class: 'empty' }, h('p', {}, 'Nothing matches those filters.'))
+    : h('div', { class: 'empty' }, h('p', {}, 'No photos yet.'), h('p', { class: 'muted' }, 'Use “Add photos” to start the board.'));
+  masonry(gridEl, photos.map((p) => card(p, ids)), empty);
 }
 
 function card(photo, ids) {

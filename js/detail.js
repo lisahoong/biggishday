@@ -1,7 +1,8 @@
-import * as api from './api.js?v=2';
-import { state, listFor, allTags } from './state.js?v=2';
-import { Markup } from './markup.js?v=2';
-import { h, icon, toast, errorMessage, timeAgo, formatDate, normalizeTag, isTyping } from './ui.js?v=2';
+import * as api from './api.js?v=3';
+import { state, listFor, allTags, TRASH_DAYS } from './state.js?v=3';
+import { Markup } from './markup.js?v=3';
+import { restore } from './trash.js?v=3';
+import { h, icon, toast, errorMessage, timeAgo, formatDate, normalizeTag, isTyping } from './ui.js?v=3';
 
 let view = null;
 
@@ -82,11 +83,13 @@ class DetailView {
     try {
       const { photo, comments, markings } = await api.loadPhotoExtras(photoId);
       if (state.version !== startVersion) return;
-      if (!photo) {
+      if (!photo || photo.deleted_at) {
+        const local = state.photos.find((p) => p.id === photoId);
         state.photos = state.photos.filter((p) => p.id !== photoId);
+        if (photo && local) state.trash.unshift(Object.assign(local, photo));
         this.ids = this.ids.filter((id) => id !== photoId);
         if (this.photoId === photoId) {
-          toast('This photo was deleted.');
+          toast(photo ? 'This photo was moved to the trash.' : 'This photo was deleted.');
           this.close();
         }
         return;
@@ -116,13 +119,23 @@ class DetailView {
   renderSide() {
     const photo = this.photo;
     if (!photo) return;
+    // Re-rendering replaces the tag input; keep it focused (and any half-typed tag) so
+    // stepping through photos or a background refresh doesn't interrupt tagging.
+    const oldInput = this.side.querySelector('.tag-input');
+    const tagFocused = oldInput && document.activeElement === oldInput;
+    const draft = oldInput?.value;
     this.side.replaceChildren(
       this.tagsSection(photo),
       this.commentsSection(photo),
       h('section', { class: 'side-footer' },
         h('p', { class: 'muted' }, `${photo.added_by_name ? `Added by ${photo.added_by_name}` : 'Imported'} · ${formatDate(photo.created_at)}`),
-        h('button', { class: 'btn btn-danger-ghost', onClick: () => this.deletePhoto(photo) }, 'Delete photo')),
+        h('button', { class: 'btn btn-danger-ghost', onClick: () => this.trashPhoto(photo) }, 'Delete photo')),
     );
+    if (tagFocused) {
+      const input = this.side.querySelector('.tag-input');
+      input.value = draft;
+      input.focus();
+    }
   }
 
   tagsSection(photo) {
@@ -138,6 +151,11 @@ class DetailView {
     };
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); commit(); }
+      // Shift+arrow moves between photos while tagging; with text typed it still selects text.
+      else if (e.shiftKey && !input.value && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        e.preventDefault();
+        this.step(e.key === 'ArrowLeft' ? -1 : 1);
+      }
     });
     input.addEventListener('blur', commit);
 
@@ -224,20 +242,22 @@ class DetailView {
     }
   }
 
-  async deletePhoto(photo) {
-    if (!confirm('Delete this photo for both of you? Its comments and markings will be deleted too.')) return;
+  // No confirm: it only moves to the trash, and the toast offers Undo.
+  async trashPhoto(photo) {
     try {
-      await api.deletePhoto(photo);
+      Object.assign(photo, await api.trashPhoto(photo.id, state.me.name));
     } catch (err) {
       toast(`Couldn't delete photo: ${errorMessage(err)}`, { kind: 'error' });
       return;
     }
     const i = this.ids.indexOf(photo.id);
     state.photos = state.photos.filter((p) => p.id !== photo.id);
-    state.comments.delete(photo.id);
-    state.markings.delete(photo.id);
+    state.trash.unshift(photo);
+    state.version++;
     this.ids = this.ids.filter((id) => id !== photo.id);
-    toast('Photo deleted.');
+    toast(`Moved to trash. You can restore it for ${TRASH_DAYS} days.`, {
+      action: { label: 'Undo', onClick: async () => { if (await restore(photo)) this.onChange(); } },
+    });
     const next = this.ids[Math.min(i, this.ids.length - 1)];
     if (next) this.show(next);
     else this.close();
