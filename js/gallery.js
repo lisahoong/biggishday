@@ -1,8 +1,8 @@
-import * as api from './api.js?v=7';
-import { state, listFor, allTags } from './state.js?v=7';
-import { openDetail } from './detail.js?v=7';
-import { renderCommentPanel, refreshCommentPanel } from './comments.js?v=7';
-import { h, icon, toast, errorMessage, masonry, normalizeTag } from './ui.js?v=7';
+import * as api from './api.js?v=8';
+import { state, listFor, allTags } from './state.js?v=8';
+import { openDetail } from './detail.js?v=8';
+import { renderCommentPanel, refreshCommentPanel } from './comments.js?v=8';
+import { h, icon, toast, errorMessage, masonry, normalizeTag } from './ui.js?v=8';
 
 const MAX_EDGE = 2400;
 const byAdded = (a, b) => Date.parse(b.created_at) - Date.parse(a.created_at);

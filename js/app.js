@@ -1,9 +1,9 @@
-import * as api from './api.js?v=7';
-import { state } from './state.js?v=7';
-import { renderGallery } from './gallery.js?v=7';
-import { renderTrash, purgeExpired } from './trash.js?v=7';
-import { renderComments } from './comments.js?v=7';
-import { h, errorMessage } from './ui.js?v=7';
+import * as api from './api.js?v=8';
+import { state } from './state.js?v=8';
+import { renderGallery } from './gallery.js?v=8';
+import { renderTrash, purgeExpired } from './trash.js?v=8';
+import { renderComments } from './comments.js?v=8';
+import { h, errorMessage } from './ui.js?v=8';
 
 const NAME_KEY = 'board.name';
 const root = document.getElementById('app');

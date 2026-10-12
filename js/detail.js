@@ -1,7 +1,7 @@
-import * as api from './api.js?v=7';
-import { state, listFor, allTags, TRASH_DAYS } from './state.js?v=7';
-import { restore } from './trash.js?v=7';
-import { h, icon, toast, errorMessage, timeAgo, formatDate, normalizeTag, isTyping } from './ui.js?v=7';
+import * as api from './api.js?v=8';
+import { state, listFor, allTags, TRASH_DAYS } from './state.js?v=8';
+import { restore } from './trash.js?v=8';
+import { h, icon, toast, errorMessage, timeAgo, formatDate, normalizeTag, isTyping } from './ui.js?v=8';
 
 let view = null;
 
@@ -43,6 +43,8 @@ class DetailView {
   }
 
   close() {
+    // Blur first so a half-typed tag is saved (the tag box commits on blur).
+    if (this.root.contains(document.activeElement)) document.activeElement.blur();
     this.root.hidden = true;
     this.photoId = null;
     document.body.classList.remove('no-scroll');
@@ -96,9 +98,15 @@ class DetailView {
   }
 
   onKey(e) {
-    if (this.root.hidden || isTyping(e)) return;
-    if (e.key === 'Escape') this.close();
-    else if (e.key === 'ArrowLeft') this.step(-1);
+    if (this.root.hidden || e.isComposing) return;
+    // Escape works from the tag and comment boxes too; only an unsent comment asks first.
+    if (e.key === 'Escape') {
+      const draft = this.side.querySelector('.comment-form textarea')?.value.trim();
+      if (!draft || confirm('Discard your unsent comment?')) this.close();
+      return;
+    }
+    if (isTyping(e)) return;
+    if (e.key === 'ArrowLeft') this.step(-1);
     else if (e.key === 'ArrowRight') this.step(1);
   }
 

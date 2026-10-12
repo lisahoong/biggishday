@@ -1,7 +1,7 @@
-import * as api from './api.js?v=7';
-import { state, listFor } from './state.js?v=7';
-import { openDetail } from './detail.js?v=7';
-import { h, icon, toast, errorMessage, timeAgo } from './ui.js?v=7';
+import * as api from './api.js?v=8';
+import { state, listFor } from './state.js?v=8';
+import { openDetail } from './detail.js?v=8';
+import { h, icon, toast, errorMessage, timeAgo } from './ui.js?v=8';
 
 let filtersEl, countEl, listEl;
 // Show only this person's comments; null shows everyone's.
