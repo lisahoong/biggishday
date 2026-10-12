@@ -14,8 +14,11 @@ A shared inspiration board for us and our wedding planner: a photo gallery with 
    Photos are deleted for good 30 days after being trashed, the next time someone opens the board.
 5. **Comments** (top bar) lists every comment on the board, newest first. Filter by person, and click one
    to open its photo.
-6. Click tags above the photos to filter them. A panel slides in on the right with the comments on any
-   photo that has one of those tags; the arrow button collapses it.
+6. Click a tag above the photos to filter them. If photos with that tag have comments, a panel slides in
+   on the right listing them; the arrow button collapses it. Adding more tags keeps it open and adds their
+   photos' comments.
+7. The selected tags are kept in the page address (`?tag=floral&tag=centerpiece`), so you can copy the
+   link to send someone the board filtered the same way.
 
 Edits save immediately. The other person sees them after refreshing.
 

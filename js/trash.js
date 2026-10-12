@@ -1,6 +1,6 @@
-import * as api from './api.js?v=8';
-import { state, TRASH_DAYS, trashExpiry } from './state.js?v=8';
-import { h, icon, toast, errorMessage, formatDate, masonry } from './ui.js?v=8';
+import * as api from './api.js?v=9';
+import { state, TRASH_DAYS, trashExpiry } from './state.js?v=9';
+import { h, icon, toast, errorMessage, formatDate, masonry } from './ui.js?v=9';
 
 let gridEl, countEl, emptyBtn;
 

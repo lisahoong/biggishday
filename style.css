@@ -340,7 +340,7 @@ body:has(.select-bar:not([hidden])) .toasts { bottom: 5.5rem; }
   .feed-thumb { width: 64px; height: 64px; }
 }
 
-/* Comments panel beside the board, shown while tags are selected */
+/* Comments panel beside the board, for the selected tags */
 .board { display: flex; align-items: flex-start; }
 .board-main { flex: 1; min-width: 0; }
 .comment-panel {
@@ -361,7 +361,6 @@ body:has(.select-bar:not([hidden])) .toasts { bottom: 5.5rem; }
 .comment-panel .feed-item { grid-template-columns: 56px minmax(0, 1fr); gap: .85rem; padding: .75rem; }
 .comment-panel .feed-thumb { width: 56px; height: 56px; }
 .comment-panel .comment-body { font-size: .84rem; }
-.panel-empty { font-family: var(--serif); font-style: italic; font-size: 1.05rem; line-height: 1.45; }
 .panel-tab {
   display: flex; align-items: center; gap: .6rem; width: 100%; padding: 1.4rem 0;
   writing-mode: vertical-rl; border: 0; background: none; cursor: pointer; color: var(--muted);

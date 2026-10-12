@@ -1,8 +1,8 @@
-import * as api from './api.js?v=8';
-import { state, listFor, allTags } from './state.js?v=8';
-import { openDetail } from './detail.js?v=8';
-import { renderCommentPanel, refreshCommentPanel } from './comments.js?v=8';
-import { h, icon, toast, errorMessage, masonry, normalizeTag } from './ui.js?v=8';
+import * as api from './api.js?v=9';
+import { state, listFor, allTags } from './state.js?v=9';
+import { openDetail } from './detail.js?v=9';
+import { renderCommentPanel, refreshCommentPanel } from './comments.js?v=9';
+import { h, icon, toast, errorMessage, masonry, normalizeTag } from './ui.js?v=9';
 
 const MAX_EDGE = 2400;
 const byAdded = (a, b) => Date.parse(b.created_at) - Date.parse(a.created_at);
@@ -93,6 +93,7 @@ export function refreshGallery() {
   trashBtn.textContent = state.trash.length ? `Trash (${state.trash.length})` : 'Trash';
   const tags = allTags();
   for (const t of [...state.filterTags]) if (!tags.some(([x]) => x === t)) state.filterTags.delete(t);
+  syncTagsToUrl();
 
   filtersEl.replaceChildren(
     h('button', {
@@ -122,6 +123,14 @@ export function refreshGallery() {
   masonry(gridEl, photos.map((p) => card(p, ids)), empty);
   updateSelectBar();
   refreshCommentPanel();
+}
+
+// Replaces rather than pushes, so Back still leaves the board instead of stepping through filters.
+function syncTagsToUrl() {
+  const url = new URL(location.href);
+  url.searchParams.delete('tag');
+  for (const t of state.filterTags) url.searchParams.append('tag', t);
+  if (url.href !== location.href) history.replaceState(null, '', url);
 }
 
 function setSelecting(on) {

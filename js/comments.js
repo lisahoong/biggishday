@@ -1,7 +1,7 @@
-import * as api from './api.js?v=8';
-import { state, listFor } from './state.js?v=8';
-import { openDetail } from './detail.js?v=8';
-import { h, icon, toast, errorMessage, timeAgo } from './ui.js?v=8';
+import * as api from './api.js?v=9';
+import { state, listFor } from './state.js?v=9';
+import { openDetail } from './detail.js?v=9';
+import { h, icon, toast, errorMessage, timeAgo } from './ui.js?v=9';
 
 let filtersEl, countEl, listEl;
 // Show only this person's comments; null shows everyone's.
@@ -94,12 +94,14 @@ function item({ comment, photo }, ids, onChange) {
       : null));
 }
 
-// Board panel: while tags are selected, comments on photos with any of those tags.
+// Board panel: comments on photos with any of the selected tags. It opens only when a single tag with
+// comments is picked; once open it stays open as more tags are added, until no selected tag has comments.
 let panel = null;
+let panelOpen = false;
 let panelCollapsed = false;
 
 export function renderCommentPanel(host, onChange) {
-  panel = { host, onChange, shown: false };
+  panel = { host, onChange, tag: null };
   refreshCommentPanel();
 }
 
@@ -107,20 +109,22 @@ export function refreshCommentPanel() {
   if (!panel?.host.isConnected) return;
   const { host, onChange } = panel;
   const tags = [...state.filterTags];
-  host.hidden = !tags.length;
-  if (!tags.length) {
-    // Clearing the tags resets the panel, so the next tag picked slides it in again.
-    panel.shown = false;
+  const single = tags.length === 1 ? tags[0] : null;
+  if (single !== panel.tag) {
+    panel.tag = single;
+    // Check for comments left since the board loaded before deciding there are none.
+    if (single) fetchLatest(refreshCommentPanel);
+  }
+  const entries = allComments().filter(({ photo }) => photo.tags.some((t) => state.filterTags.has(t)));
+  panelOpen = entries.length > 0 && (panelOpen || single !== null);
+  host.hidden = !panelOpen;
+  if (!panelOpen) {
+    // Reset so it slides in open next time.
     panelCollapsed = false;
     host.replaceChildren();
     return;
   }
-  if (!panel.shown) {
-    panel.shown = true;
-    fetchLatest(refreshCommentPanel);
-  }
 
-  const entries = allComments().filter(({ photo }) => photo.tags.some((t) => state.filterTags.has(t)));
   host.classList.toggle('is-collapsed', panelCollapsed);
   const setCollapsed = (collapsed) => { panelCollapsed = collapsed; refreshCommentPanel(); };
   if (panelCollapsed) {
@@ -137,8 +141,6 @@ export function refreshCommentPanel() {
         h('h2', {}, `Comments · ${entries.length}`),
         h('p', { class: 'muted small' }, `On photos tagged ${tagList}`)),
       h('button', { class: 'btn btn-icon', 'aria-label': 'Collapse comments', title: 'Collapse comments', onClick: () => setCollapsed(true) }, icon('right'))),
-    entries.length
-      ? h('div', { class: 'feed' }, entries.map((entry) => item(entry, ids, onChange)))
-      : h('p', { class: 'panel-empty muted' }, 'No comments on these photos yet.'),
+    h('div', { class: 'feed' }, entries.map((entry) => item(entry, ids, onChange))),
   );
 }
