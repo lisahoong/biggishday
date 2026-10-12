@@ -1,8 +1,9 @@
-import * as api from './api.js?v=6';
-import { state } from './state.js?v=6';
-import { renderGallery } from './gallery.js?v=6';
-import { renderTrash, purgeExpired } from './trash.js?v=6';
-import { h, errorMessage } from './ui.js?v=6';
+import * as api from './api.js?v=7';
+import { state } from './state.js?v=7';
+import { renderGallery } from './gallery.js?v=7';
+import { renderTrash, purgeExpired } from './trash.js?v=7';
+import { renderComments } from './comments.js?v=7';
+import { h, errorMessage } from './ui.js?v=7';
 
 const NAME_KEY = 'board.name';
 const root = document.getElementById('app');
@@ -75,6 +76,7 @@ const galleryActions = {
   onSignOut: () => api.signOut(),
   onChangeName: () => askName(() => renderGallery(root, galleryActions)),
   onOpenTrash: () => renderTrash(root, { onBack: () => renderGallery(root, galleryActions) }),
+  onOpenComments: () => renderComments(root, { onBack: () => renderGallery(root, galleryActions) }),
 };
 
 function boot(session) {

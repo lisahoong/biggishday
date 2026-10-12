@@ -1,7 +1,8 @@
-import * as api from './api.js?v=6';
-import { state, listFor, allTags } from './state.js?v=6';
-import { openDetail } from './detail.js?v=6';
-import { h, icon, toast, errorMessage, masonry, normalizeTag } from './ui.js?v=6';
+import * as api from './api.js?v=7';
+import { state, listFor, allTags } from './state.js?v=7';
+import { openDetail } from './detail.js?v=7';
+import { renderCommentPanel, refreshCommentPanel } from './comments.js?v=7';
+import { h, icon, toast, errorMessage, masonry, normalizeTag } from './ui.js?v=7';
 
 const MAX_EDGE = 2400;
 const byAdded = (a, b) => Date.parse(b.created_at) - Date.parse(a.created_at);
@@ -16,7 +17,13 @@ let filtersEl, gridEl, countEl, trashBtn, selectBtn, selectBar;
 let selecting = false;
 const selected = new Set();
 
-export function renderGallery(root, { onSignOut, onChangeName, onOpenTrash }) {
+// The comments panel sticks just below the topbar, so it needs the topbar's height.
+// (A topbar removed from the page reports 0; keep the last real height.)
+const topbarObserver = new ResizeObserver(([entry]) => {
+  if (entry.target.isConnected) document.documentElement.style.setProperty('--topbar-h', `${entry.target.offsetHeight}px`);
+});
+
+export function renderGallery(root, { onSignOut, onChangeName, onOpenTrash, onOpenComments }) {
   enableDrop();
   const search = h('input', {
     type: 'search', class: 'search', placeholder: 'Search', 'aria-label': 'Search tags and comments',
@@ -42,22 +49,32 @@ export function renderGallery(root, { onSignOut, onChangeName, onOpenTrash }) {
   selected.clear();
   selectBtn = h('button', { class: 'link-btn select-toggle', onClick: () => setSelecting(!selecting) }, 'Select');
   selectBar = renderSelectBar();
+  const commentPanel = h('aside', { class: 'comment-panel', 'aria-label': 'Comments on photos with the selected tags', hidden: true });
+
+  const topbar = h('header', { class: 'topbar' },
+    h('div', { class: 'brand' }, 'Our Wedding Board'),
+    search,
+    h('button', { class: 'btn btn-primary', onClick: () => fileInput.click() }, icon('upload'), 'Add photos'),
+    fileInput,
+    h('div', { class: 'me' },
+      h('button', { class: 'link-btn me-name', title: 'Change your name', onClick: onChangeName }, state.me.name),
+      h('button', { class: 'link-btn', onClick: onOpenComments }, 'Comments'),
+      trashBtn,
+      h('button', { class: 'link-btn', onClick: onSignOut }, 'Sign out')));
+  topbarObserver.disconnect();
+  topbarObserver.observe(topbar);
 
   root.replaceChildren(
-    h('header', { class: 'topbar' },
-      h('div', { class: 'brand' }, 'Our Wedding Board'),
-      search,
-      h('button', { class: 'btn btn-primary', onClick: () => fileInput.click() }, icon('upload'), 'Add photos'),
-      fileInput,
-      h('div', { class: 'me' },
-        h('button', { class: 'link-btn me-name', title: 'Change your name', onClick: onChangeName }, state.me.name),
-        trashBtn,
-        h('button', { class: 'link-btn', onClick: onSignOut }, 'Sign out'))),
-    filtersEl,
-    h('div', { class: 'count-row' }, countEl, h('div', { class: 'count-actions' }, selectBtn, sort)),
-    gridEl,
+    topbar,
+    h('div', { class: 'board' },
+      h('div', { class: 'board-main' },
+        filtersEl,
+        h('div', { class: 'count-row' }, countEl, h('div', { class: 'count-actions' }, selectBtn, sort)),
+        gridEl),
+      commentPanel),
     selectBar,
   );
+  renderCommentPanel(commentPanel, refreshGallery);
   refreshGallery();
 }
 
@@ -104,6 +121,7 @@ export function refreshGallery() {
     : h('div', { class: 'empty' }, h('p', {}, 'No photos yet.'), h('p', { class: 'muted' }, 'Use “Add photos”, or drag or paste photos onto the page.'));
   masonry(gridEl, photos.map((p) => card(p, ids)), empty);
   updateSelectBar();
+  refreshCommentPanel();
 }
 
 function setSelecting(on) {

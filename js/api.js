@@ -1,5 +1,5 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm';
-import { SUPABASE_URL, SUPABASE_ANON_KEY, BOARD_EMAIL } from './config.js?v=6';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, BOARD_EMAIL } from './config.js?v=7';
 
 export const configured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 const sb = configured ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
@@ -111,4 +111,8 @@ export async function addComment(photoId, body, authorName) {
 export async function deleteComment(commentId) {
   const deleted = check(await sb.from('comments').delete().eq('id', commentId).select('id'));
   if (!deleted.length) throw new Error('Comment was already removed.');
+}
+
+export async function loadComments() {
+  return check(await sb.from('comments').select('*').order('created_at'));
 }

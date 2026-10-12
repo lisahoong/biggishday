@@ -11,6 +11,7 @@
   --serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
   --sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   --side: 380px;
+  --topbar-h: 73px;
   --ease: cubic-bezier(.2, .7, .2, 1);
 }
 
@@ -161,8 +162,11 @@ h2 {
 
 .masonry { --cols: 4; display: flex; align-items: flex-start; gap: 1.75rem; padding: 1.25rem 2.5rem 5rem; }
 .masonry-col { flex: 1; min-width: 0; }
-@media (max-width: 1179px) { .masonry { --cols: 3; } }
-@media (max-width: 899px) { .masonry { --cols: 2; } }
+/* Columns follow the space beside the comments panel, not the window. #app is the container on
+   pages without the panel (trash). */
+#app, .board-main { container: board / inline-size; }
+@container board (max-width: 1179px) { .masonry { --cols: 3; } }
+@container board (max-width: 899px) { .masonry { --cols: 2; } }
 .card { margin: 0 0 2rem; cursor: pointer; }
 .card img {
   display: block; width: 100%; height: auto; min-height: 80px; border-radius: 3px; background: var(--line);
@@ -316,3 +320,63 @@ body:has(.select-bar:not([hidden])) .toasts { bottom: 5.5rem; }
   body:has(.select-bar:not([hidden])) .toasts { bottom: 9rem; }
 }
 .masonry.is-selecting { padding-bottom: 9rem; }
+
+/* Comments page */
+.feed-page { max-width: 860px; margin: 0 auto; }
+.feed { display: grid; gap: .75rem; padding: 1.25rem 2.5rem 5rem; }
+.feed-item {
+  display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 1.25rem; align-items: start;
+  padding: 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  cursor: pointer; transition: border-color .2s var(--ease);
+}
+.feed-item:hover { border-color: #cfc6b8; }
+.feed-thumb { display: block; width: 88px; height: 88px; object-fit: cover; border-radius: 3px; background: var(--line); }
+.feed-text { display: grid; gap: .15rem; min-width: 0; }
+.feed-text .card-tags { margin-top: .45rem; }
+.feed .empty { padding: 4rem 1rem; }
+@media (max-width: 820px) {
+  .feed { padding: .9rem 1.1rem 4rem; }
+  .feed-item { grid-template-columns: 64px minmax(0, 1fr); gap: .9rem; padding: .8rem; }
+  .feed-thumb { width: 64px; height: 64px; }
+}
+
+/* Comments panel beside the board, shown while tags are selected */
+.board { display: flex; align-items: flex-start; }
+.board-main { flex: 1; min-width: 0; }
+.comment-panel {
+  position: sticky; top: var(--topbar-h); flex: none; width: 360px; height: calc(100vh - var(--topbar-h));
+  overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: 1.25rem; padding: 1.4rem 1.25rem 2rem;
+  background: var(--surface); border-left: 1px solid var(--line);
+  animation: slide-in .35s var(--ease);
+}
+.comment-panel[hidden] { display: none; }
+@keyframes slide-in { from { opacity: 0; transform: translateX(48px); } }
+.comment-panel.is-collapsed { width: 46px; padding: 0; overflow: visible; animation: fade .25s var(--ease); }
+.comment-panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
+.comment-panel-head h2 { margin: 0 0 .3rem; }
+.comment-panel-head .btn-icon { flex: none; width: 32px; height: 32px; margin: -.45rem -.45rem 0 0; color: var(--muted); }
+.comment-panel-head .btn-icon:hover { color: var(--ink); background: var(--bg); }
+.comment-panel .feed { padding: 0; gap: .6rem; }
+.comment-panel .feed-item { grid-template-columns: 56px minmax(0, 1fr); gap: .85rem; padding: .75rem; }
+.comment-panel .feed-thumb { width: 56px; height: 56px; }
+.comment-panel .comment-body { font-size: .84rem; }
+.panel-empty { font-family: var(--serif); font-style: italic; font-size: 1.05rem; line-height: 1.45; }
+.panel-tab {
+  display: flex; align-items: center; gap: .6rem; width: 100%; padding: 1.4rem 0;
+  writing-mode: vertical-rl; border: 0; background: none; cursor: pointer; color: var(--muted);
+  font-size: .68rem; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+}
+.panel-tab .icon { writing-mode: horizontal-tb; }
+.panel-tab:hover { color: var(--ink); }
+
+/* Phones: no room beside the photos, so the panel floats over them from the bottom right. */
+@media (max-width: 820px) {
+  .comment-panel {
+    position: fixed; top: auto; right: 0; bottom: 0; z-index: 15; width: min(360px, 90vw); height: 70vh;
+    border: 1px solid var(--line); border-right: 0; border-radius: 16px 0 0 0;
+    box-shadow: 0 -18px 40px -16px rgba(60, 45, 30, .35);
+  }
+  .comment-panel.is-collapsed { width: auto; height: auto; bottom: 1.25rem; border-radius: 999px 0 0 999px; }
+  .comment-panel.is-collapsed .panel-tab { writing-mode: horizontal-tb; padding: .65rem 1rem; }
+}

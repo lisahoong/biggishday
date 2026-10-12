@@ -12,6 +12,10 @@ A shared inspiration board for us and our wedding planner: a photo gallery with 
 3. Click a photo to view it large, add tags, or comment.
 4. **Delete photo** moves a photo to the **Trash** (link in the top bar), where either of you can restore it.
    Photos are deleted for good 30 days after being trashed, the next time someone opens the board.
+5. **Comments** (top bar) lists every comment on the board, newest first. Filter by person, and click one
+   to open its photo.
+6. Click tags above the photos to filter them. A panel slides in on the right with the comments on any
+   photo that has one of those tags; the arrow button collapses it.
 
 Edits save immediately. The other person sees them after refreshing.
 
