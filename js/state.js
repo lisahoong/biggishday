@@ -4,7 +4,6 @@ export const state = {
   // Photos in the trash, most recently trashed first.
   trash: [],
   comments: new Map(),
-  markings: new Map(),
   // The board opens filtered to this tag; dropped automatically if no photo has it.
   filterTags: new Set(['inspiration']),
   search: '',

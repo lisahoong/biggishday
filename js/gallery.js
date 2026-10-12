@@ -1,7 +1,7 @@
-import * as api from './api.js?v=5';
-import { state, listFor, allTags } from './state.js?v=5';
-import { openDetail } from './detail.js?v=5';
-import { h, icon, toast, errorMessage, masonry, normalizeTag } from './ui.js?v=5';
+import * as api from './api.js?v=6';
+import { state, listFor, allTags } from './state.js?v=6';
+import { openDetail } from './detail.js?v=6';
+import { h, icon, toast, errorMessage, masonry, normalizeTag } from './ui.js?v=6';
 
 const MAX_EDGE = 2400;
 const byAdded = (a, b) => Date.parse(b.created_at) - Date.parse(a.created_at);
@@ -198,7 +198,6 @@ async function tagSelected(tags) {
 
 function card(photo, ids) {
   const comments = listFor(state.comments, photo.id).length;
-  const marks = listFor(state.markings, photo.id).length;
   const shownTags = photo.tags.slice(0, 4);
   const isSelected = selecting && selected.has(photo.id);
   const activate = (e) => {
@@ -214,15 +213,14 @@ function card(photo, ids) {
   },
   h('span', { class: 'card-check', 'aria-hidden': 'true' }),
   h('img', { src: photo.url, alt: '', loading: 'lazy', decoding: 'async' }),
-  shownTags.length || comments || marks
+  shownTags.length || comments
     ? h('figcaption', {},
       h('div', { class: 'card-tags' },
         shownTags.map((t) => h('span', { class: 'chip chip-sm' }, t)),
         photo.tags.length > 4 ? h('span', { class: 'muted small' }, `+${photo.tags.length - 4}`) : null),
-      comments || marks
+      comments
         ? h('div', { class: 'card-meta' },
-          comments ? h('span', { title: `${comments} comment${comments === 1 ? '' : 's'}` }, icon('comment'), comments) : null,
-          marks ? h('span', { title: `${marks} marking${marks === 1 ? '' : 's'}` }, icon('pen'), marks) : null)
+          h('span', { title: `${comments} comment${comments === 1 ? '' : 's'}` }, icon('comment'), comments))
         : null)
     : null);
 }

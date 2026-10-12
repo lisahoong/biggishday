@@ -1,17 +1,15 @@
 # Our Wedding Board
 
-A shared inspiration board for us and our wedding planner: a photo gallery with tags, comments,
-and drawn markings that can be shown or hidden.
+A shared inspiration board for us and our wedding planner: a photo gallery with tags and comments.
 
 - **Live site:** https://lisahoong.github.io/biggishday/
-- **Data:** Supabase project `wedding-board` (photos, tags, comments, markings, private photo storage)
+- **Data:** Supabase project `wedding-board` (photos, tags, comments, private photo storage)
 
 ## Using it
 
 1. Open the site and enter the board password.
-2. Enter your name once per device. It's shown next to your comments, marks, and uploads.
-3. Click a photo to view it large, add tags, comment, or draw on it (**Draw** → pen / arrow / circle).
-   **Markings shown / hidden** toggles marks for your own view only.
+2. Enter your name once per device. It's shown next to your comments and uploads.
+3. Click a photo to view it large, add tags, or comment.
 4. **Delete photo** moves a photo to the **Trash** (link in the top bar), where either of you can restore it.
    Photos are deleted for good 30 days after being trashed, the next time someone opens the board.
 

@@ -1,5 +1,5 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm';
-import { SUPABASE_URL, SUPABASE_ANON_KEY, BOARD_EMAIL } from './config.js?v=5';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, BOARD_EMAIL } from './config.js?v=6';
 
 export const configured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 const sb = configured ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
@@ -45,22 +45,20 @@ async function attachUrls(photos) {
 }
 
 export async function loadBoard() {
-  const [photos, comments, markings] = await Promise.all([
+  const [photos, comments] = await Promise.all([
     sb.from('photos').select('*').order('created_at', { ascending: false }).then(check),
     sb.from('comments').select('*').order('created_at').then(check),
-    sb.from('markings').select('*').order('created_at').then(check),
   ]);
   await attachUrls(photos);
-  return { photos, comments, markings };
+  return { photos, comments };
 }
 
 export async function loadPhotoExtras(photoId) {
-  const [photo, comments, markings] = await Promise.all([
+  const [photo, comments] = await Promise.all([
     sb.from('photos').select('*').eq('id', photoId).maybeSingle().then(check),
     sb.from('comments').select('*').eq('photo_id', photoId).order('created_at').then(check),
-    sb.from('markings').select('*').eq('photo_id', photoId).order('created_at').then(check),
   ]);
-  return { photo, comments, markings };
+  return { photo, comments };
 }
 
 export async function uploadPhoto(blob, originalName, addedBy) {
@@ -98,7 +96,7 @@ export async function restorePhoto(photoId) {
   if (!rows.length) throw new Error('Photo is no longer in the trash.');
 }
 
-// Permanent: removes the row (comments and markings cascade) and the image file.
+// Permanent: removes the row (comments cascade) and the image file.
 export async function deletePhoto(photo) {
   // Row first: a leftover file is harmless, a row pointing at a missing file is a broken card.
   const deleted = check(await sb.from('photos').delete().eq('id', photo.id).select('id'));
@@ -113,13 +111,4 @@ export async function addComment(photoId, body, authorName) {
 export async function deleteComment(commentId) {
   const deleted = check(await sb.from('comments').delete().eq('id', commentId).select('id'));
   if (!deleted.length) throw new Error('Comment was already removed.');
-}
-
-export async function addMarking(photoId, shape, authorName) {
-  return check(await sb.from('markings').insert({ photo_id: photoId, shape, author_name: authorName }).select().single());
-}
-
-export async function deleteMarkings(ids) {
-  const deleted = check(await sb.from('markings').delete().in('id', ids).select('id'));
-  if (deleted.length !== ids.length) throw new Error('Some markings could not be removed.');
 }

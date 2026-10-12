@@ -1,12 +1,16 @@
-import * as api from './api.js?v=5';
-import { state } from './state.js?v=5';
-import { renderGallery } from './gallery.js?v=5';
-import { renderTrash, purgeExpired } from './trash.js?v=5';
-import { h, errorMessage } from './ui.js?v=5';
+import * as api from './api.js?v=6';
+import { state } from './state.js?v=6';
+import { renderGallery } from './gallery.js?v=6';
+import { renderTrash, purgeExpired } from './trash.js?v=6';
+import { h, errorMessage } from './ui.js?v=6';
 
 const NAME_KEY = 'board.name';
 const root = document.getElementById('app');
 let signedIn;
+
+// Leftover preferences from the removed drawing feature.
+localStorage.removeItem('board.showMarkings');
+localStorage.removeItem('board.drawPrefs');
 
 function message(title, text, ...actions) {
   root.replaceChildren(h('div', { class: 'center-card' }, h('h1', {}, title), h('p', { class: 'muted' }, text), ...actions));
@@ -49,18 +53,17 @@ function askName(onDone) {
     state.me = { name: value };
     onDone();
   });
-  card(current ? 'Change your name' : "What's your name?", 'Shown next to your comments, markings and uploads on this device.', form);
+  card(current ? 'Change your name' : "What's your name?", 'Shown next to your comments and uploads on this device.', form);
 }
 
 async function loadBoard() {
   message('Loading…', 'Fetching the board.');
   try {
-    const { photos, comments, markings } = await api.loadBoard();
+    const { photos, comments } = await api.loadBoard();
     state.photos = photos.filter((p) => !p.deleted_at);
     state.trash = photos.filter((p) => p.deleted_at).sort((a, b) => Date.parse(b.deleted_at) - Date.parse(a.deleted_at));
     purgeExpired();
     state.comments = groupBy(comments);
-    state.markings = groupBy(markings);
     renderGallery(root, galleryActions);
   } catch (err) {
     message('Something went wrong', errorMessage(err),

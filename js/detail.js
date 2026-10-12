@@ -1,8 +1,7 @@
-import * as api from './api.js?v=5';
-import { state, listFor, allTags, TRASH_DAYS } from './state.js?v=5';
-import { Markup } from './markup.js?v=5';
-import { restore } from './trash.js?v=5';
-import { h, icon, toast, errorMessage, timeAgo, formatDate, normalizeTag, isTyping } from './ui.js?v=5';
+import * as api from './api.js?v=6';
+import { state, listFor, allTags, TRASH_DAYS } from './state.js?v=6';
+import { restore } from './trash.js?v=6';
+import { h, icon, toast, errorMessage, timeAgo, formatDate, normalizeTag, isTyping } from './ui.js?v=6';
 
 let view = null;
 
@@ -14,8 +13,6 @@ export function openDetail(photoId, orderedIds, onChange) {
 class DetailView {
   constructor() {
     this.img = h('img', { class: 'detail-img', alt: '' });
-    this.stage = h('div', { class: 'stage' }, this.img);
-    this.markupBar = h('div', { class: 'markup-bar' });
     this.counter = h('span', { class: 'counter' });
     this.prevBtn = h('button', { class: 'btn btn-icon nav-prev', 'aria-label': 'Previous photo', onClick: () => this.step(-1) }, icon('left'));
     this.nextBtn = h('button', { class: 'btn btn-icon nav-next', 'aria-label': 'Next photo', onClick: () => this.step(1) }, icon('right'));
@@ -25,14 +22,11 @@ class DetailView {
       h('div', { class: 'detail-main' },
         h('div', { class: 'detail-top' },
           h('button', { class: 'btn btn-icon', 'aria-label': 'Close', onClick: () => this.close() }, icon('close')),
-          this.counter,
-          this.markupBar),
-        h('div', { class: 'stage-wrap' }, this.prevBtn, this.stage, this.nextBtn)),
+          this.counter),
+        h('div', { class: 'stage-wrap' }, this.prevBtn, h('div', { class: 'stage' }, this.img), this.nextBtn)),
       this.side);
     document.body.append(this.root);
 
-    this.markup = new Markup({ stage: this.stage, img: this.img, toolbar: this.markupBar, });
-    this.img.addEventListener('load', () => this.markup.render());
     document.addEventListener('keydown', (e) => this.onKey(e));
   }
 
@@ -49,7 +43,6 @@ class DetailView {
   }
 
   close() {
-    this.markup.setDrawing(false);
     this.root.hidden = true;
     this.photoId = null;
     document.body.classList.remove('no-scroll');
@@ -72,7 +65,6 @@ class DetailView {
     this.counter.textContent = `${i + 1} of ${this.ids.length}`;
     this.prevBtn.disabled = i <= 0;
     this.nextBtn.disabled = i >= this.ids.length - 1;
-    this.markup.setPhoto(photoId);
     this.renderSide();
     this.refreshFromServer(photoId);
   }
@@ -81,7 +73,7 @@ class DetailView {
   async refreshFromServer(photoId) {
     const startVersion = state.version;
     try {
-      const { photo, comments, markings } = await api.loadPhotoExtras(photoId);
+      const { photo, comments } = await api.loadPhotoExtras(photoId);
       if (state.version !== startVersion) return;
       if (!photo || photo.deleted_at) {
         const local = state.photos.find((p) => p.id === photoId);
@@ -96,13 +88,8 @@ class DetailView {
       }
       const local = state.photos.find((p) => p.id === photoId);
       if (local) local.tags = photo.tags;
-      const pendingMarks = listFor(state.markings, photoId).filter((m) => m.pending);
       state.comments.set(photoId, comments);
-      state.markings.set(photoId, [...markings, ...pendingMarks]);
-      if (this.photoId === photoId) {
-        this.markup.refresh();
-        this.renderSide();
-      }
+      if (this.photoId === photoId) this.renderSide();
     } catch (err) {
       toast(`Couldn't refresh this photo: ${errorMessage(err)}`, { kind: 'error' });
     }
@@ -110,7 +97,6 @@ class DetailView {
 
   onKey(e) {
     if (this.root.hidden || isTyping(e)) return;
-    if (this.markup.handleKey(e)) { e.preventDefault(); return; }
     if (e.key === 'Escape') this.close();
     else if (e.key === 'ArrowLeft') this.step(-1);
     else if (e.key === 'ArrowRight') this.step(1);

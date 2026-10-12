@@ -1,6 +1,6 @@
-import * as api from './api.js?v=5';
-import { state, TRASH_DAYS, trashExpiry } from './state.js?v=5';
-import { h, icon, toast, errorMessage, formatDate, masonry } from './ui.js?v=5';
+import * as api from './api.js?v=6';
+import { state, TRASH_DAYS, trashExpiry } from './state.js?v=6';
+import { h, icon, toast, errorMessage, formatDate, masonry } from './ui.js?v=6';
 
 let gridEl, countEl, emptyBtn;
 
@@ -66,11 +66,10 @@ async function purge(photo) {
   await api.deletePhoto(photo);
   state.trash = state.trash.filter((p) => p.id !== photo.id);
   state.comments.delete(photo.id);
-  state.markings.delete(photo.id);
 }
 
 async function deleteForever(photo) {
-  if (!confirm('Delete this photo for good? Its comments and markings will be deleted too. This can\'t be undone.')) return;
+  if (!confirm('Delete this photo for good? Its comments will be deleted too. This can\'t be undone.')) return;
   try {
     await purge(photo);
     toast('Photo deleted for good.');
