@@ -1,17 +1,19 @@
-import * as api from './api.js?v=9';
-import { state } from './state.js?v=9';
-import { renderGallery } from './gallery.js?v=9';
-import { renderTrash, purgeExpired } from './trash.js?v=9';
-import { renderComments } from './comments.js?v=9';
-import { h, errorMessage, normalizeTag } from './ui.js?v=9';
+import * as api from './api.js?v=10';
+import { state } from './state.js?v=10';
+import { renderGallery } from './gallery.js?v=10';
+import { renderTrash, purgeExpired } from './trash.js?v=10';
+import { renderComments } from './comments.js?v=10';
+import { h, errorMessage, normalizeTag } from './ui.js?v=10';
 
 const NAME_KEY = 'board.name';
 const root = document.getElementById('app');
 let signedIn;
 
-// Selected tags live in the URL (?tag=floral&tag=centerpiece) so a filtered board can be shared.
-// Tags no photo has are dropped once the board loads.
-state.filterTags = new Set(new URLSearchParams(location.search).getAll('tag').map(normalizeTag).filter(Boolean));
+// Selected tags and the archived toggle live in the URL (?tag=floral&tag=centerpiece&archived=1) so a
+// filtered board can be shared. Tags no photo has are dropped once the board loads.
+const params = new URLSearchParams(location.search);
+state.filterTags = new Set(params.getAll('tag').map(normalizeTag).filter(Boolean));
+state.showArchived = params.get('archived') === '1';
 
 // Leftover preferences from the removed drawing feature.
 localStorage.removeItem('board.showMarkings');

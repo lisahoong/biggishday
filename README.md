@@ -19,6 +19,8 @@ A shared inspiration board for us and our wedding planner: a photo gallery with 
    photos' comments.
 7. The selected tags are kept in the page address (`?tag=floral&tag=centerpiece`), so you can copy the
    link to send someone the board filtered the same way.
+8. Photos tagged **archived** are hidden from the board and comment lists. **Show archived** (above the
+   photos) brings them back, as does selecting the "archived" tag.
 
 Edits save immediately. The other person sees them after refreshing.
 

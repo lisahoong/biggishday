@@ -1,8 +1,8 @@
-import * as api from './api.js?v=9';
-import { state, listFor, allTags } from './state.js?v=9';
-import { openDetail } from './detail.js?v=9';
-import { renderCommentPanel, refreshCommentPanel } from './comments.js?v=9';
-import { h, icon, toast, errorMessage, masonry, normalizeTag } from './ui.js?v=9';
+import * as api from './api.js?v=10';
+import { state, listFor, allTags, isShown, ARCHIVED } from './state.js?v=10';
+import { openDetail } from './detail.js?v=10';
+import { renderCommentPanel, refreshCommentPanel } from './comments.js?v=10';
+import { h, icon, toast, errorMessage, masonry, normalizeTag } from './ui.js?v=10';
 
 const MAX_EDGE = 2400;
 const byAdded = (a, b) => Date.parse(b.created_at) - Date.parse(a.created_at);
@@ -12,7 +12,7 @@ const SORTS = {
   comments: ['Most comments', (a, b) => listFor(state.comments, b.id).length - listFor(state.comments, a.id).length || byAdded(a, b)],
 };
 
-let filtersEl, gridEl, countEl, trashBtn, selectBtn, selectBar;
+let filtersEl, gridEl, countEl, trashBtn, selectBtn, selectBar, archivedBtn;
 // Select mode: clicking photos toggles them, and the bottom bar tags them all at once.
 let selecting = false;
 const selected = new Set();
@@ -48,6 +48,10 @@ export function renderGallery(root, { onSignOut, onChangeName, onOpenTrash, onOp
   selecting = false;
   selected.clear();
   selectBtn = h('button', { class: 'link-btn select-toggle', onClick: () => setSelecting(!selecting) }, 'Select');
+  archivedBtn = h('button', {
+    class: 'link-btn select-toggle',
+    onClick: () => { state.showArchived = !state.showArchived; refreshGallery(); },
+  });
   selectBar = renderSelectBar();
   const commentPanel = h('aside', { class: 'comment-panel', 'aria-label': 'Comments on photos with the selected tags', hidden: true });
 
@@ -69,7 +73,7 @@ export function renderGallery(root, { onSignOut, onChangeName, onOpenTrash, onOp
     h('div', { class: 'board' },
       h('div', { class: 'board-main' },
         filtersEl,
-        h('div', { class: 'count-row' }, countEl, h('div', { class: 'count-actions' }, selectBtn, sort)),
+        h('div', { class: 'count-row' }, countEl, h('div', { class: 'count-actions' }, archivedBtn, selectBtn, sort)),
         gridEl),
       commentPanel),
     selectBar,
@@ -81,6 +85,7 @@ export function renderGallery(root, { onSignOut, onChangeName, onOpenTrash, onOp
 function visiblePhotos() {
   const q = state.search.trim().toLowerCase();
   return state.photos.filter((p) => {
+    if (!isShown(p)) return false;
     for (const t of state.filterTags) if (!p.tags.includes(t)) return false;
     if (!q) return true;
     return p.tags.some((t) => t.includes(q))
@@ -91,9 +96,20 @@ function visiblePhotos() {
 export function refreshGallery() {
   if (!gridEl) return;
   trashBtn.textContent = state.trash.length ? `Trash (${state.trash.length})` : 'Trash';
-  const tags = allTags();
-  for (const t of [...state.filterTags]) if (!tags.some(([x]) => x === t)) state.filterTags.delete(t);
-  syncTagsToUrl();
+  const known = allTags();
+  for (const t of [...state.filterTags]) if (!known.some(([x]) => x === t)) state.filterTags.delete(t);
+  syncUrl();
+
+  // Chip counts cover only the photos in view, so hidden archived photos don't inflate them.
+  // The "archived" chip and any selected tag always get a chip, so they can be clicked.
+  const inView = state.photos.filter(isShown);
+  const tags = allTags(inView);
+  const archivedCount = state.photos.filter((p) => p.tags.includes(ARCHIVED)).length;
+  if (archivedCount && !tags.some(([t]) => t === ARCHIVED)) tags.push([ARCHIVED, archivedCount]);
+  for (const t of state.filterTags) if (!tags.some(([x]) => x === t)) tags.push([t, 0]);
+  archivedBtn.hidden = !archivedCount;
+  archivedBtn.textContent = state.showArchived ? 'Hide archived' : `Show archived (${archivedCount})`;
+  archivedBtn.setAttribute('aria-pressed', String(state.showArchived));
 
   filtersEl.replaceChildren(
     h('button', {
@@ -113,9 +129,9 @@ export function refreshGallery() {
 
   const photos = visiblePhotos();
   const ids = photos.map((p) => p.id);
-  countEl.textContent = photos.length === state.photos.length
+  countEl.textContent = photos.length === inView.length
     ? `${photos.length} photo${photos.length === 1 ? '' : 's'}`
-    : `Showing ${photos.length} of ${state.photos.length}`;
+    : `Showing ${photos.length} of ${inView.length}`;
 
   const empty = state.photos.length
     ? h('div', { class: 'empty' }, h('p', {}, 'Nothing matches those filters.'))
@@ -126,10 +142,12 @@ export function refreshGallery() {
 }
 
 // Replaces rather than pushes, so Back still leaves the board instead of stepping through filters.
-function syncTagsToUrl() {
+function syncUrl() {
   const url = new URL(location.href);
   url.searchParams.delete('tag');
   for (const t of state.filterTags) url.searchParams.append('tag', t);
+  if (state.showArchived) url.searchParams.set('archived', '1');
+  else url.searchParams.delete('archived');
   if (url.href !== location.href) history.replaceState(null, '', url);
 }
 

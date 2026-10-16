@@ -5,6 +5,8 @@ export const state = {
   trash: [],
   comments: new Map(),
   filterTags: new Set(),
+  // Photos tagged ARCHIVED are left off the board and its comment lists unless this is on.
+  showArchived: false,
   search: '',
   sort: 'newest',
   // Bumped on every local edit so a slower background refresh can't overwrite it.
@@ -12,6 +14,12 @@ export const state = {
 };
 
 export const TRASH_DAYS = 30;
+export const ARCHIVED = 'archived';
+
+// Archived photos show when the toggle is on, or when the "archived" tag itself is selected.
+export function isShown(photo) {
+  return state.showArchived || state.filterTags.has(ARCHIVED) || !photo.tags.includes(ARCHIVED);
+}
 
 export function trashExpiry(photo) {
   return Date.parse(photo.deleted_at) + TRASH_DAYS * 86400000;
@@ -22,8 +30,8 @@ export function listFor(map, photoId) {
   return map.get(photoId);
 }
 
-export function allTags() {
+export function allTags(photos = state.photos) {
   const counts = new Map();
-  for (const p of state.photos) for (const t of p.tags) counts.set(t, (counts.get(t) || 0) + 1);
+  for (const p of photos) for (const t of p.tags) counts.set(t, (counts.get(t) || 0) + 1);
   return [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 }

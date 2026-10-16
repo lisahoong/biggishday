@@ -1,7 +1,7 @@
-import * as api from './api.js?v=9';
-import { state, listFor } from './state.js?v=9';
-import { openDetail } from './detail.js?v=9';
-import { h, icon, toast, errorMessage, timeAgo } from './ui.js?v=9';
+import * as api from './api.js?v=10';
+import { state, listFor, isShown } from './state.js?v=10';
+import { openDetail } from './detail.js?v=10';
+import { h, icon, toast, errorMessage, timeAgo } from './ui.js?v=10';
 
 let filtersEl, countEl, listEl;
 // Show only this person's comments; null shows everyone's.
@@ -38,13 +38,13 @@ async function fetchLatest(onDone) {
   }
 }
 
-// Newest first. Comments on photos in the trash are left out.
+// Newest first. Comments on photos in the trash, or archived photos that are hidden, are left out.
 function allComments() {
   const photos = new Map(state.photos.map((p) => [p.id, p]));
   const all = [];
   for (const [photoId, comments] of state.comments) {
     const photo = photos.get(photoId);
-    if (photo) for (const comment of comments) all.push({ comment, photo });
+    if (photo && isShown(photo)) for (const comment of comments) all.push({ comment, photo });
   }
   return all.sort((a, b) => Date.parse(b.comment.created_at) - Date.parse(a.comment.created_at));
 }

@@ -1,7 +1,7 @@
-import * as api from './api.js?v=9';
-import { state, listFor, allTags, TRASH_DAYS } from './state.js?v=9';
-import { restore } from './trash.js?v=9';
-import { h, icon, toast, errorMessage, timeAgo, formatDate, normalizeTag, isTyping } from './ui.js?v=9';
+import * as api from './api.js?v=10';
+import { state, listFor, allTags, TRASH_DAYS } from './state.js?v=10';
+import { restore } from './trash.js?v=10';
+import { h, icon, toast, errorMessage, timeAgo, formatDate, normalizeTag, isTyping } from './ui.js?v=10';
 
 let view = null;
 
